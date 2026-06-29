@@ -71,12 +71,12 @@ input::placeholder{
 /* CATEGORÍAS */
 .card-cat{
     background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.08);
     border-radius:14px;
     padding:15px;
     cursor:pointer;
     transition:.25s ease;
     text-align:center;
+    border:1px solid rgba(255,255,255,.08);
 }
 
 .card-cat:hover{
@@ -95,15 +95,13 @@ input::placeholder{
 /* PROFESIONALES */
 .card-prof{
     background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.08);
     border-radius:14px;
     padding:12px;
-    font-size:13px;
+    border:1px solid rgba(255,255,255,.08);
     transition:.25s ease;
     cursor:pointer;
 }
 
-/* 🔥 ZOOM PRO */
 .card-prof:hover{
     transform:translateY(-6px) scale(1.03);
     background:rgba(255,255,255,.12);
@@ -184,6 +182,28 @@ function icono(cat) {
     return "icons/default.png";
 }
 
+// ===== HORARIO ABIERTO / CERRADO =====
+function estaAbierto(horario) {
+    const ahora = new Date();
+    const hora = ahora.getHours();
+
+    const texto = (horario || "").toLowerCase();
+
+    if (texto.includes("24")) return true;
+
+    const match = texto.match(/(\d{1,2})\s*-\s*(\d{1,2})/);
+    if (!match) return true;
+
+    const h1 = parseInt(match[1]);
+    const h2 = parseInt(match[2]);
+
+    if (h1 <= h2) {
+        return hora >= h1 && hora < h2;
+    } else {
+        return hora >= h1 || hora < h2;
+    }
+}
+
 // ===== AGRUPAR =====
 function agrupar(lista) {
     const g = {};
@@ -222,7 +242,7 @@ function verCategoria(cat) {
     renderLista(filtrar(profesionales));
 }
 
-// ===== FILTRO ÚNICO =====
+// ===== FILTRO =====
 function filtrar(lista) {
     const t = buscador.value.toLowerCase();
 
@@ -245,7 +265,10 @@ function filtrar(lista) {
 
 // ===== RENDER LISTA =====
 function renderLista(lista) {
-    contenedor.innerHTML = lista.map(p => `
+    contenedor.innerHTML = lista.map(p => {
+        const abierto = estaAbierto(p.horario);
+
+        return `
         <div class="card-prof">
 
             <div class="prof-top">
@@ -258,14 +281,23 @@ function renderLista(lista) {
 
             <p>📍 ${p.ciudad || "Sin ciudad"}</p>
             <p>🏠 ${p.direccion || "Sin dirección"}</p>
+            <p>🕒 ${p.horario || "Sin horario"}</p>
+
+            <p style="font-weight:bold;">
+                ${abierto
+                    ? '<span style="color:#22c55e">🟢 Abierto ahora</span>'
+                    : '<span style="color:#ef4444">🔴 Cerrado ahora</span>'
+                }
+            </p>
 
             <a href="tel:${p.telefono}">Llamar</a>
             <a href="https://wa.me/${p.whatsapp}" target="_blank">WhatsApp</a>
         </div>
-    `).join("");
+        `;
+    }).join("");
 }
 
-// ===== BUSCADOR GLOBAL =====
+// ===== BUSCADOR =====
 buscador.addEventListener("input", () => {
     if (vista === "categorias") {
         const grupos = agrupar(profesionales);
