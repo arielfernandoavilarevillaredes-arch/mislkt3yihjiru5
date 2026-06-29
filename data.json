@@ -20,6 +20,38 @@
     "activo": true,
     "foto": ""
   },
+
+
+  {
+    "nombre": "AFAR Computación",
+    "categoria": "Tecnico computadoras",
+    "tags": ["computadoras", "celulares", "videojuegos"],
+    "telefono": "2931 400906",
+    "whatsapp": "2931 400906",
+    "ciudad": "Río Colorado",
+    "direccion": "Belgrano",
+    "horario": {
+      "lunes": "10:00-20:00",
+      "martes": "10:00-20:00",
+      "miércoles": "10:00-20:00",
+      "jueves": "10:00-20:00",
+      "viernes": "10:00-20:00",
+      "sábado": "10:00-13:00",
+      "domingo": "10:00-13:00"
+    },
+    "rating": 4.8,
+    "activo": true,
+    "foto": ""
+  },
+
+
+
+
+
+
+
+
+
   {
     "nombre": "María González",
     "categoria": "Plomera",
