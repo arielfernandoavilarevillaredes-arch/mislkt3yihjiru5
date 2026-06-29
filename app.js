@@ -32,16 +32,15 @@ h2{
     margin-bottom:10px;
 }
 
-/* INPUTS */
+/* BUSCADOR */
 input{
-    width:min(600px,90%);
-    padding:10px 14px;
+    width:min(650px,90%);
+    padding:11px 14px;
     border:none;
     border-radius:10px;
     background:rgba(255,255,255,.12);
     color:white;
     outline:none;
-    margin:5px;
 }
 
 input::placeholder{
@@ -76,13 +75,14 @@ input::placeholder{
     border-radius:14px;
     padding:15px;
     cursor:pointer;
-    transition:.3s;
+    transition:.25s ease;
     text-align:center;
 }
 
 .card-cat:hover{
-    transform:translateY(-6px);
+    transform:translateY(-6px) scale(1.03);
     background:rgba(255,255,255,.12);
+    box-shadow:0 18px 35px rgba(0,0,0,.35);
 }
 
 .card-cat img{
@@ -99,12 +99,21 @@ input::placeholder{
     border-radius:14px;
     padding:12px;
     font-size:13px;
+    transition:.25s ease;
+    cursor:pointer;
+}
+
+/* 🔥 ZOOM PRO */
+.card-prof:hover{
+    transform:translateY(-6px) scale(1.03);
+    background:rgba(255,255,255,.12);
+    box-shadow:0 18px 35px rgba(0,0,0,.35);
 }
 
 .prof-top{
     display:flex;
-    align-items:center;
     gap:10px;
+    align-items:center;
     margin-bottom:8px;
 }
 
@@ -143,10 +152,7 @@ input::placeholder{
 
 <header>
     <h2>Servicios Río Colorado</h2>
-
-    <input id="busquedaGlobal" placeholder="Buscar categoría o profesional...">
-    <input id="busquedaLocal" placeholder="Buscar dentro de categoría..." style="display:none;">
-
+    <input id="buscador" placeholder="Buscar profesional, rubro, ciudad, tags...">
     <button id="volver">⬅ Volver</button>
 </header>
 
@@ -154,13 +160,12 @@ input::placeholder{
 `;
 
 const contenedor = document.getElementById("contenedor");
+const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
-const busquedaGlobal = document.getElementById("busquedaGlobal");
-const busquedaLocal = document.getElementById("busquedaLocal");
 
 // ===== CARGA =====
 fetch(DATA_URL)
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
         profesionales = data;
         renderCategorias();
@@ -196,7 +201,6 @@ function renderCategorias() {
     categoriaActual = null;
 
     volver.style.display = "none";
-    busquedaLocal.style.display = "none";
 
     const grupos = agrupar(profesionales);
 
@@ -208,15 +212,35 @@ function renderCategorias() {
     `).join("");
 }
 
-// ===== LISTA PROFESIONALES =====
+// ===== VER CATEGORÍA =====
 function verCategoria(cat) {
     vista = "lista";
     categoriaActual = cat;
 
     volver.style.display = "inline-block";
-    busquedaLocal.style.display = "inline-block";
 
-    renderLista(profesionales.filter(p => p.categoria === cat));
+    renderLista(filtrar(profesionales));
+}
+
+// ===== FILTRO ÚNICO =====
+function filtrar(lista) {
+    const t = buscador.value.toLowerCase();
+
+    return lista.filter(p => {
+        const texto = `
+            ${p.nombre}
+            ${p.categoria}
+            ${(p.tags || []).join(" ")}
+            ${p.ciudad}
+            ${p.direccion}
+        `.toLowerCase();
+
+        if (vista === "lista") {
+            return p.categoria === categoriaActual && texto.includes(t);
+        }
+
+        return texto.includes(t);
+    });
 }
 
 // ===== RENDER LISTA =====
@@ -242,14 +266,12 @@ function renderLista(lista) {
 }
 
 // ===== BUSCADOR GLOBAL =====
-busquedaGlobal.addEventListener("input", e => {
-    const t = e.target.value.toLowerCase();
-
+buscador.addEventListener("input", () => {
     if (vista === "categorias") {
         const grupos = agrupar(profesionales);
 
         const filtradas = Object.keys(grupos).filter(cat =>
-            cat.toLowerCase().includes(t)
+            cat.toLowerCase().includes(buscador.value.toLowerCase())
         );
 
         contenedor.innerHTML = filtradas.map(cat => `
@@ -258,37 +280,14 @@ busquedaGlobal.addEventListener("input", e => {
                 <div>${cat}</div>
             </div>
         `).join("");
+
     } else {
-        const filtrados = profesionales.filter(p =>
-            p.categoria === categoriaActual &&
-            (
-                p.nombre.toLowerCase().includes(t) ||
-                (p.tags || []).join(" ").toLowerCase().includes(t)
-            )
-        );
-
-        renderLista(filtrados);
+        renderLista(filtrar(profesionales));
     }
-});
-
-// ===== BUSCADOR LOCAL =====
-busquedaLocal.addEventListener("input", e => {
-    const t = e.target.value.toLowerCase();
-
-    const filtrados = profesionales.filter(p =>
-        p.categoria === categoriaActual &&
-        (
-            p.nombre.toLowerCase().includes(t) ||
-            (p.tags || []).join(" ").toLowerCase().includes(t)
-        )
-    );
-
-    renderLista(filtrados);
 });
 
 // ===== VOLVER =====
 volver.onclick = () => {
-    busquedaGlobal.value = "";
-    busquedaLocal.value = "";
+    buscador.value = "";
     renderCategorias();
 };
