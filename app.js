@@ -6,12 +6,7 @@ let categoriaActual = null;
 
 document.body.innerHTML = `
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;}
 body{
     font-family:"Segoe UI", Arial, sans-serif;
     background: linear-gradient(135deg,#0f172a,#1e293b,#111827);
@@ -19,7 +14,6 @@ body{
     color:white;
 }
 
-/* HEADER */
 header{
     text-align:center;
     padding:25px 15px;
@@ -28,11 +22,8 @@ header{
     border-bottom:1px solid rgba(255,255,255,.08);
 }
 
-h2{
-    margin-bottom:10px;
-}
+h2{margin-bottom:10px;}
 
-/* BUSCADOR */
 input{
     width:min(650px,90%);
     padding:11px 14px;
@@ -43,11 +34,6 @@ input{
     outline:none;
 }
 
-input::placeholder{
-    color:#cbd5e1;
-}
-
-/* BOTÓN VOLVER */
 #volver{
     display:none;
     margin-top:10px;
@@ -60,7 +46,6 @@ input::placeholder{
     font-weight:bold;
 }
 
-/* GRID */
 #contenedor{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
@@ -68,55 +53,17 @@ input::placeholder{
     padding:20px;
 }
 
-/* CATEGORÍAS */
-.card-cat{
-    background:rgba(255,255,255,.08);
-    border-radius:14px;
-    padding:15px;
-    cursor:pointer;
-    transition:.25s ease;
-    text-align:center;
-    border:1px solid rgba(255,255,255,.08);
-}
-
-.card-cat:hover{
-    transform:translateY(-6px) scale(1.03);
-    background:rgba(255,255,255,.12);
-    box-shadow:0 18px 35px rgba(0,0,0,.35);
-}
-
-.card-cat img{
-    width:55px;
-    height:55px;
-    object-fit:contain;
-    margin-bottom:8px;
-}
-
-/* PROFESIONALES */
-.card-prof{
+.card-cat,.card-prof{
     background:rgba(255,255,255,.08);
     border-radius:14px;
     padding:12px;
-    border:1px solid rgba(255,255,255,.08);
-    transition:.25s ease;
+    transition:.2s;
+    cursor:pointer;
 }
 
-.card-prof:hover{
-    transform:translateY(-6px) scale(1.03);
+.card-prof:hover,.card-cat:hover{
+    transform:scale(1.03);
     background:rgba(255,255,255,.12);
-    box-shadow:0 18px 35px rgba(0,0,0,.35);
-}
-
-.prof-top{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    margin-bottom:8px;
-}
-
-.prof-top img{
-    width:35px;
-    height:35px;
 }
 
 .badge{
@@ -125,32 +72,13 @@ input::placeholder{
     font-size:11px;
     border-radius:999px;
     background:rgba(59,130,246,.25);
-    color:#93c5fd;
-    margin-top:3px;
-}
-
-.card-prof p{
-    color:#cbd5e1;
-    margin-bottom:4px;
-}
-
-.card-prof a{
-    display:inline-block;
-    margin-top:8px;
-    padding:6px 10px;
-    background:linear-gradient(135deg,#3b82f6,#06b6d4);
-    color:white;
-    text-decoration:none;
-    border-radius:8px;
-    font-size:12px;
-    margin-right:5px;
 }
 </style>
 
 <header>
-    <h2>Servicios Río Colorado</h2>
-    <input id="buscador" placeholder="Buscar profesional, rubro, ciudad, tags...">
-    <button id="volver">⬅ Volver</button>
+<h2>Servicios Río Colorado</h2>
+<input id="buscador" placeholder="Buscar...">
+<button id="volver">⬅ Volver</button>
 </header>
 
 <div id="contenedor">Cargando...</div>
@@ -160,226 +88,150 @@ const contenedor = document.getElementById("contenedor");
 const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
-// ===== NORMALIZAR =====
-function norm(t) {
-    return (t || "").toLowerCase().trim();
-}
+function norm(t){ return (t||"").toLowerCase().trim(); }
 
-// ===== CARGA =====
+// ================= DATA =================
 fetch(DATA_URL)
-    .then(r => r.json())
-    .then(data => {
-        profesionales = data;
-        renderCategorias();
-    });
+.then(r=>r.json())
+.then(data=>{
+    profesionales = data;
+    renderCategorias();
+});
 
-// ===== ICONOS =====
-function icono(cat) {
+// ================= ICONOS =================
+function icono(cat){
     const base = "https://arielfernandoavilarevillaredes-arch.github.io/mislkt3yihjiru5/icons/";
     const c = norm(cat);
 
-    if (c.includes("plom")) return base + "plomero.png";
-    if (c.includes("comput") || c.includes("celular")) return base + "computadora.png";
-    if (c.includes("emergencia")) return base + "emergencias.png";
-    if (c.includes("electric")) return base + "electricista.png";
-    if (c.includes("gas")) return base + "gasista.png";
-    if (c.includes("carpint")) return base + "carpintero.png";
-    if (c.includes("pint")) return base + "pintor.png";
+    if(c.includes("plom")) return base+"plomero.png";
+    if(c.includes("comput") || c.includes("celular")) return base+"computadora.png";
+    if(c.includes("emerg")) return base+"emergencias.png";
+    if(c.includes("electric")) return base+"electricista.png";
+    if(c.includes("gas")) return base+"gasista.png";
 
-    return base + "default.png";
+    return base+"default.png";
 }
 
-// ===== SIN HORARIO =====
-function esSinHorario(horario) {
-    if (!horario) return true;
-
-    if (typeof horario === "string") {
-        return horario.toLowerCase().trim() === "sin horario";
-    }
-
-    return false;
-}
-
-// ===== HORARIO PRO =====
-function estadoHorario(horario) {
+// ================= HORARIOS =================
+function estadoHorario(h){
 
     // 🔥 SIN HORARIO = SIEMPRE ABIERTO
-    if (esSinHorario(horario)) {
-        return {
-            estado: "abierto",
-            texto: "🟢 Abierto todo el día (sin horario)"
-        };
+    if(!h || h === "sin horario"){
+        return {estado:"abierto", texto:"🟢 Abierto todo el día"};
     }
 
     const ahora = new Date();
-    const dia = ahora.getDay();
-    const horaActual = ahora.getHours() * 60 + ahora.getMinutes();
-
     const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
-    const hoy = dias[dia];
+    const hoy = dias[ahora.getDay()];
+    const hora = ahora.getHours()*60 + ahora.getMinutes();
 
-    const texto =
-        typeof horario === "string"
-            ? horario
-            : horario?.[hoy];
+    const txt = h[hoy];
 
-    function parse(h) {
-        const m = h.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
-        if (!m) return null;
-
-        let ini = parseInt(m[1]) * 60;
-        let fin = parseInt(m[3]) * 60;
-
-        if (m[2]) ini += parseInt(m[2]);
-        if (m[4]) fin += parseInt(m[4]);
-
-        return { ini, fin };
+    if(!txt || txt.toLowerCase()==="cerrado"){
+        return {estado:"cerrado", texto:"🔴 Cerrado"};
     }
 
-    if (!texto || texto.toLowerCase() === "cerrado") {
+    if(txt.includes("24") || txt.includes("00:00-00:00")){
+        return {estado:"abierto", texto:"🟢 Abierto todo el día"};
+    }
+
+    const m = txt.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
+
+    if(!m) return {estado:"abierto", texto:"🟢 Abierto"};
+
+    let ini = parseInt(m[1])*60 + (m[2]?parseInt(m[2]):0);
+    let fin = parseInt(m[3])*60 + (m[4]?parseInt(m[4]):0);
+
+    if(hora >= ini && hora < fin){
         return {
-            estado: "cerrado",
-            texto: "🔴 Cerrado"
+            estado:"abierto",
+            texto:`🟢 Abierto · cierra en ${fin-hora} min`
         };
     }
 
-    if (texto.includes("24")) {
-        return { estado: "abierto", texto: "🟢 Abierto todo el día" };
-    }
-
-    const h = parse(texto);
-    if (!h) return { estado: "abierto" };
-
-    if (horaActual >= h.ini && horaActual < h.fin) {
+    if(hora < ini){
         return {
-            estado: "abierto",
-            cierraEn: h.fin - horaActual
+            estado:"cerrado",
+            texto:`🔴 Cerrado · abre en ${ini-hora} min`
         };
     }
 
-    if (horaActual < h.ini) {
-        return {
-            estado: "cerrado",
-            abreEn: h.ini - horaActual
-        };
-    }
-
-    return {
-        estado: "cerrado",
-        texto: "🔴 Cerrado"
-    };
+    return {estado:"cerrado", texto:"🔴 Cerrado"};
 }
 
-// ===== FORMATO =====
-function formatearMinutos(min) {
-    if (min < 60) return `${min} min`;
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return m === 0 ? `${h} h` : `${h} h ${m} min`;
-}
-
-// ===== AGRUPAR =====
-function agrupar(lista) {
+// ================= AGRUPAR =================
+function agrupar(lista){
     const g = {};
-    lista.forEach(p => {
+    lista.forEach(p=>{
         const c = p.categoria || "Otros";
-        if (!g[c]) g[c] = [];
+        if(!g[c]) g[c]=[];
         g[c].push(p);
     });
     return g;
 }
 
-// ===== ORDEN =====
-function tiempoApertura(p) {
-    const e = estadoHorario(p.horario);
-    if (e.cierraEn != null) return 0;
-    if (e.abreEn != null) return e.abreEn;
-    return 999999;
-}
-
-// ===== CATEGORÍAS =====
-function renderCategorias() {
-    vista = "categorias";
-    categoriaActual = null;
-
-    volver.style.display = "none";
+// ================= CATEGORÍAS =================
+function renderCategorias(){
+    vista="categorias";
+    categoriaActual=null;
+    volver.style.display="none";
 
     const grupos = agrupar(profesionales);
 
-    contenedor.innerHTML = Object.keys(grupos).sort().map(cat => `
+    contenedor.innerHTML = Object.keys(grupos).map(cat=>`
         <div class="card-cat" data-cat="${cat}">
-            <img src="${icono(cat)}">
             <div>${cat}</div>
         </div>
     `).join("");
 }
 
-// ===== CLICK =====
-contenedor.addEventListener("click", (e) => {
-    const card = e.target.closest(".card-cat");
-    if (!card) return;
-    categoriaActual = norm(card.dataset.cat);
+// ================= CLICK =================
+contenedor.onclick = (e)=>{
+    const c = e.target.closest(".card-cat");
+    if(!c) return;
+    categoriaActual = norm(c.dataset.cat);
     verCategoria();
-});
+};
 
-// ===== VER =====
-function verCategoria() {
-    vista = "lista";
-    volver.style.display = "inline-block";
+function verCategoria(){
+    vista="lista";
+    volver.style.display="block";
     renderLista(filtrar(profesionales));
 }
 
-// ===== FILTRO =====
-function filtrar(lista) {
+// ================= FILTRO =================
+function filtrar(list){
     const t = norm(buscador.value);
 
-    return lista.filter(p => {
-        const texto = `
-            ${p.nombre}
-            ${p.categoria}
-            ${(p.tags || []).join(" ")}
-            ${p.ciudad}
-            ${p.direccion}
-        `.toLowerCase();
+    return list.filter(p=>{
+        const txt = `${p.nombre} ${p.categoria} ${(p.tags||[]).join(" ")} ${p.ciudad} ${p.direccion}`.toLowerCase();
 
-        if (vista === "lista") {
-            return norm(p.categoria) === categoriaActual && texto.includes(t);
+        if(vista==="lista"){
+            return norm(p.categoria)===categoriaActual && txt.includes(t);
         }
-
-        return texto.includes(t);
+        return txt.includes(t);
     });
 }
 
-// ===== RENDER =====
-function renderLista(lista) {
+// ================= RENDER =================
+function renderLista(list){
 
-    lista = [...lista].sort((a,b) => tiempoApertura(a) - tiempoApertura(b));
+    list = [...list];
 
-    contenedor.innerHTML = lista.map(p => {
-
+    contenedor.innerHTML = list.map(p=>{
         const e = estadoHorario(p.horario);
 
         return `
         <div class="card-prof">
+            <b>${p.nombre}</b>
+            <div class="badge">${p.categoria}</div>
 
-            <div class="prof-top">
-                <img src="${icono(p.categoria)}">
-                <div>
-                    <b>${p.nombre}</b>
-                    <div class="badge">${p.categoria}</div>
-                </div>
-            </div>
+            <p>📍 ${p.ciudad || ""}</p>
+            <p>🏠 ${p.direccion || ""}</p>
 
-            <p>📍 ${p.ciudad || "Sin ciudad"}</p>
-            <p>🏠 ${p.direccion || "Sin dirección"}</p>
-
-            <p style="font-weight:bold;">
-                ${e.estado === "abierto" ? "🟢 Abierto" : "🔴 Cerrado"}
+            <p style="margin-top:6px;font-weight:bold;">
+                ${e.texto}
             </p>
-
-            ${e.cierraEn ? `<p>⏳ Cierra en ${formatearMinutos(e.cierraEn)}</p>` : ""}
-            ${e.abreEn ? `<p>⏱ Abre en ${formatearMinutos(e.abreEn)}</p>` : ""}
-            ${e.texto ? `<p>${e.texto}</p>` : ""}
 
             <a href="tel:${p.telefono}">Llamar</a>
             <a href="https://wa.me/${p.whatsapp}" target="_blank">WhatsApp</a>
@@ -388,28 +240,14 @@ function renderLista(lista) {
     }).join("");
 }
 
-// ===== BUSCADOR =====
-buscador.addEventListener("input", () => {
-    if (vista === "categorias") {
-        const grupos = agrupar(profesionales);
+// ================= BUSCADOR =================
+buscador.oninput = ()=>{
+    if(vista==="categorias") renderCategorias();
+    else renderLista(filtrar(profesionales));
+};
 
-        const filtradas = Object.keys(grupos).filter(cat =>
-            norm(cat).includes(norm(buscador.value))
-        );
-
-        contenedor.innerHTML = filtradas.map(cat => `
-            <div class="card-cat" data-cat="${cat}">
-                <img src="${icono(cat)}">
-                <div>${cat}</div>
-            </div>
-        `).join("");
-    } else {
-        renderLista(filtrar(profesionales));
-    }
-});
-
-// ===== VOLVER =====
-volver.onclick = () => {
-    buscador.value = "";
+// ================= VOLVER =================
+volver.onclick = ()=>{
+    buscador.value="";
     renderCategorias();
 };
