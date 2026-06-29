@@ -75,7 +75,7 @@ input{
     background:rgba(59,130,246,.25);
 }
 
-/* 🔥 BOTONES REALES */
+/* BOTONES */
 .btn{
     display:inline-block;
     margin-top:8px;
@@ -86,18 +86,10 @@ input{
     font-weight:bold;
     text-align:center;
     cursor:pointer;
-    border:none;
 }
 
-.btn-whatsapp{
-    background:#22c55e;
-    color:white;
-}
-
-.btn-call{
-    background:#3b82f6;
-    color:white;
-}
+.btn-wa{background:#22c55e;color:white;}
+.btn-tel{background:#3b82f6;color:white;}
 </style>
 
 <header>
@@ -114,8 +106,8 @@ const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
 /* ================= HELP ================= */
-function norm(t){ 
-    return (t || "").toLowerCase().trim(); 
+function norm(t){
+    return (t || "").toLowerCase().trim();
 }
 
 /* ================= DATA ================= */
@@ -142,11 +134,14 @@ function icono(cat){
     return base+"default.png";
 }
 
-/* ================= HORARIO ================= */
+/* ================= HORARIO UNIVERSAL ================= */
 function estadoHorario(h){
 
     if(!h || h === "sin horario"){
-        return {estado:"abierto", texto:"🟢 Abierto todo el día"};
+        return {
+            estado:"abierto",
+            texto:"🟢 Abierto todo el día (sin horario)"
+        };
     }
 
     const ahora = new Date();
@@ -154,34 +149,62 @@ function estadoHorario(h){
     const hoy = dias[ahora.getDay()];
     const minutos = ahora.getHours()*60 + ahora.getMinutes();
 
-    const txt = h[hoy];
+    let data = h[hoy];
 
-    if(!txt || txt.toLowerCase()==="cerrado"){
+    /* ===== STRING ===== */
+    if(typeof data === "string"){
+
+        if(data.toLowerCase()==="cerrado")
+            return {estado:"cerrado", texto:"🔴 Cerrado"};
+
+        if(data.includes("24") || data==="00:00-00:00")
+            return {estado:"abierto", texto:"🟢 Abierto todo el día"};
+
+        const m = data.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
+        if(!m) return {estado:"abierto", texto:"🟢 Abierto"};
+
+        let ini = parseInt(m[1])*60 + (m[2]?parseInt(m[2]):0);
+        let fin = parseInt(m[3])*60 + (m[4]?parseInt(m[4]):0);
+
+        if(minutos >= ini && minutos < fin){
+            return {
+                estado:"abierto",
+                texto:`🟢 Abierto · cierra en ${fin-minutos} min`
+            };
+        }
+
+        if(minutos < ini){
+            return {
+                estado:"cerrado",
+                texto:`🔴 Cerrado · abre en ${ini-minutos} min`
+            };
+        }
+
         return {estado:"cerrado", texto:"🔴 Cerrado"};
     }
 
-    if(txt.includes("24") || txt==="00:00-00:00"){
-        return {estado:"abierto", texto:"🟢 Abierto todo el día"};
-    }
+    /* ===== OBJETO NUEVO ===== */
+    if(typeof data === "object" && data.abre){
 
-    const m = txt.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
-    if(!m) return {estado:"abierto", texto:"🟢 Abierto"};
+        let [h1,m1]=data.abre.split(":").map(Number);
+        let [h2,m2]=data.cierra.split(":").map(Number);
 
-    let ini = parseInt(m[1])*60 + (m[2]?parseInt(m[2]):0);
-    let fin = parseInt(m[3])*60 + (m[4]?parseInt(m[4]):0);
+        let ini = h1*60 + (m1||0);
+        let fin = h2*60 + (m2||0);
 
-    if(minutos >= ini && minutos < fin){
-        return {
-            estado:"abierto",
-            texto:`🟢 Abierto · cierra en ${fin-minutos} min`
-        };
-    }
+        if(minutos >= ini && minutos < fin){
+            return {
+                estado:"abierto",
+                texto:`🟢 Abierto · cierra en ${fin-minutos} min`
+            };
+        }
 
-    if(minutos < ini){
-        return {
-            estado:"cerrado",
-            texto:`🔴 Cerrado · abre en ${ini-minutos} min`
-        };
+        if(minutos < ini){
+            return {
+                estado:"cerrado",
+                texto:`🔴 Cerrado · abre en ${ini-minutos} min`
+            };
+        }
     }
 
     return {estado:"cerrado", texto:"🔴 Cerrado"};
@@ -214,12 +237,12 @@ function renderCategorias(){
     `).join("");
 }
 
-/* CLICK CATEGORÍAS (FIX REAL) */
+/* CLICK FIX */
 contenedor.addEventListener("click",(e)=>{
     const card = e.target.closest(".card-cat");
     if(!card) return;
 
-    categoriaActual = card.dataset.cat; // 🔥 FIX IMPORTANTE
+    categoriaActual = card.dataset.cat;
     verCategoria();
 });
 
@@ -271,12 +294,11 @@ function renderLista(list){
                 ${e.texto}
             </p>
 
-            <!-- 🔥 BOTONES -->
-            <a class="btn btn-call" href="tel:${p.telefono}">
+            <a class="btn btn-tel" href="tel:${p.telefono}">
                 📞 Llamar
             </a>
 
-            <a class="btn btn-whatsapp" href="https://wa.me/${p.whatsapp}" target="_blank">
+            <a class="btn btn-wa" href="https://wa.me/${p.whatsapp}" target="_blank">
                 💬 WhatsApp
             </a>
 
