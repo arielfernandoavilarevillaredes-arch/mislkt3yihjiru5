@@ -85,7 +85,13 @@ function render(lista) {
 
       <p>${p.descripcion || ""}</p>
 
-      <p class="tags">${(p.tags || []).join(" • ")}</p>
+      <p class="tags">
+  ${
+    Array.isArray(p.tags)
+      ? p.tags.join(" • ")
+      : (typeof p.tags === "string" ? p.tags : "")
+  }
+</p>
 
       <div class="botones">
         <a href="tel:${p.telefono}">📞 Llamar</a>
