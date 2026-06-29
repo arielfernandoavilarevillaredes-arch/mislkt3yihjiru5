@@ -53,26 +53,31 @@
 
 
   {
-    "nombre": "María González",
-    "categoria": "Plomera",
-    "tags": ["agua", "reparaciones"],
+    "nombre": "Policia (comisaria 11)",
+    "categoria": "Emergencias",
+    "tags": ["policia", "emergencias"],
     "telefono": "2920555511",
     "whatsapp": "5492920555511",
     "ciudad": "Río Colorado",
     "direccion": "Belgrano 456",
     "horario": {
-      "lunes": "09:00-17:00",
-      "martes": "09:00-17:00",
-      "miércoles": "09:00-17:00",
-      "jueves": "09:00-17:00",
-      "viernes": "09:00-17:00",
-      "sábado": "cerrado",
-      "domingo": "cerrado"
+      "lunes": "00:00-00:00",
+      "martes": "09:00-00:00",
+      "miércoles": "09:00-00:00",
+      "jueves": "09:00-00:00",
+      "viernes": "09:00-00:00",
+      "sábado": "09:00-00:00",
+      "domingo": "09:00-00:00"
     },
     "rating": 4.6,
     "activo": true,
     "foto": ""
   },
+
+
+
+
+
   {
     "nombre": "Gasista Matriculado",
     "categoria": "Gas",
