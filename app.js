@@ -19,28 +19,27 @@ body{
 
 header{
     text-align:center;
-    padding:40px 20px;
+    padding:35px 20px;
     background:rgba(255,255,255,.05);
     backdrop-filter:blur(12px);
     border-bottom:1px solid rgba(255,255,255,.08);
 }
 
-header h1{
-    font-size:2.2rem;
-    margin-bottom:15px;
+header h2{
+    font-size:2rem;
+    margin-bottom:12px;
 }
 
 input{
     width:min(600px,90%);
-    padding:14px 18px;
+    padding:12px 16px;
     border:none;
-    border-radius:14px;
+    border-radius:12px;
     background:rgba(255,255,255,.12);
     color:white;
-    font-size:16px;
+    font-size:15px;
     outline:none;
     transition:.3s;
-    backdrop-filter:blur(10px);
 }
 
 input::placeholder{
@@ -54,62 +53,54 @@ input:focus{
 
 #contenedor{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:25px;
-    padding:35px;
+    grid-template-columns:repeat(auto-fill, minmax(190px, 1fr));
+    gap:14px;
+    padding:20px;
 }
 
 .card{
     background:rgba(255,255,255,.08);
     backdrop-filter:blur(15px);
     border:1px solid rgba(255,255,255,.08);
-    border-radius:18px;
-    padding:20px;
+    border-radius:14px;
+    padding:12px;
     transition:.3s;
-    overflow:hidden;
-    position:relative;
-}
-
-.card::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(135deg,transparent,rgba(255,255,255,.05));
-    pointer-events:none;
+    font-size:13px;
 }
 
 .card:hover{
-    transform:translateY(-8px);
-    box-shadow:0 20px 35px rgba(0,0,0,.35);
+    transform:translateY(-5px);
+    box-shadow:0 15px 30px rgba(0,0,0,.35);
 }
 
 .card h3{
-    margin-bottom:10px;
-    font-size:20px;
+    font-size:15px;
+    margin-bottom:6px;
+}
+
+.card b{
+    display:block;
+    margin-bottom:6px;
+    color:#93c5fd;
 }
 
 .card p{
     color:#cbd5e1;
-    line-height:1.6;
+    line-height:1.4;
+    margin-bottom:4px;
 }
 
 .card a{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    margin-top:18px;
-    padding:12px 18px;
+    display:inline-block;
+    margin-top:10px;
+    padding:8px 10px;
     background:linear-gradient(135deg,#3b82f6,#06b6d4);
     color:white;
     text-decoration:none;
-    border-radius:12px;
+    border-radius:10px;
     font-weight:600;
-    transition:.3s;
-}
-
-.card a:hover{
-    transform:scale(1.05);
-    box-shadow:0 10px 25px rgba(59,130,246,.45);
+    font-size:12px;
+    margin-right:5px;
 }
 </style>
 
@@ -128,7 +119,7 @@ const buscar = document.getElementById("buscar");
 fetch(DATA_URL)
     .then(res => res.json())
     .then(data => {
-        profesionales = data;
+        profesionales = ordenarPorCategoria(data);
         render(profesionales);
     })
     .catch(err => {
@@ -136,15 +127,26 @@ fetch(DATA_URL)
         console.log(err);
     });
 
+// ===== ORDEN POR CATEGORÍA =====
+function ordenarPorCategoria(lista) {
+    return lista.sort((a, b) =>
+        (a.categoria || "").localeCompare(b.categoria || "")
+    );
+}
+
 // ===== RENDER =====
 function render(lista) {
     contenedor.innerHTML = lista.map(p => `
         <div class="card">
             <h3>${p.nombre}</h3>
             <b>${p.categoria}</b>
+
             <p>${(p.tags || []).join(", ")}</p>
 
-            <a href="tel:${p.telefono}">Llamar</a><br>
+            <p>📍 ${p.ciudad || "Sin ciudad"}</p>
+            <p>🏠 ${p.direccion || "Sin dirección"}</p>
+
+            <a href="tel:${p.telefono}">Llamar</a>
             <a href="https://wa.me/${p.whatsapp}" target="_blank">WhatsApp</a>
         </div>
     `).join("");
