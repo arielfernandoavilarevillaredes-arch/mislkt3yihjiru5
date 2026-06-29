@@ -10,29 +10,28 @@ document.body.innerHTML = `
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
-    font-family:"Segoe UI", Arial, sans-serif;
-    background: linear-gradient(135deg,#0f172a,#1e293b,#111827);
-    min-height:100vh;
+    font-family:"Segoe UI", Arial;
+    background:linear-gradient(135deg,#0f172a,#1e293b,#111827);
     color:white;
+    min-height:100vh;
 }
 
 header{
     text-align:center;
-    padding:25px 15px;
+    padding:20px;
     background:rgba(255,255,255,.05);
-    backdrop-filter:blur(12px);
+    backdrop-filter:blur(10px);
 }
 
 h2{margin-bottom:10px;}
 
 input{
     width:min(650px,90%);
-    padding:11px;
+    padding:10px;
     border:none;
     border-radius:10px;
     background:rgba(255,255,255,.12);
     color:white;
-    outline:none;
 }
 
 #volver{
@@ -41,10 +40,9 @@ input{
     padding:8px 14px;
     border:none;
     border-radius:10px;
-    cursor:pointer;
     background:#3b82f6;
     color:white;
-    font-weight:bold;
+    cursor:pointer;
 }
 
 #contenedor{
@@ -54,12 +52,12 @@ input{
     padding:20px;
 }
 
+/* cards */
 .card-cat,.card-prof{
     background:rgba(255,255,255,.08);
     border-radius:14px;
     padding:12px;
     transition:.2s;
-    cursor:pointer;
 }
 
 .card-cat:hover,.card-prof:hover{
@@ -67,29 +65,30 @@ input{
     background:rgba(255,255,255,.12);
 }
 
+/* badge */
 .badge{
     display:inline-block;
     padding:3px 8px;
     font-size:11px;
     border-radius:999px;
     background:rgba(59,130,246,.25);
+    margin-top:4px;
 }
 
-/* BOTONES */
+/* botones */
 .btn{
     display:inline-block;
     margin-top:8px;
     padding:8px 10px;
-    border-radius:10px;
-    text-decoration:none;
+    border-radius:8px;
     font-size:12px;
-    font-weight:bold;
-    text-align:center;
+    border:none;
     cursor:pointer;
+    font-weight:bold;
 }
 
-.btn-wa{background:#22c55e;color:white;}
-.btn-tel{background:#3b82f6;color:white;}
+.btn-call{background:#22c55e;color:white;}
+.btn-wa{background:#25D366;color:white;}
 </style>
 
 <header>
@@ -106,8 +105,30 @@ const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
 /* ================= HELP ================= */
-function norm(t){
-    return (t || "").toLowerCase().trim();
+function norm(t){ return (t||"").toLowerCase().trim(); }
+
+function parseTime(t){
+    if(!t) return 0;
+    const [h,m] = t.split(":").map(Number);
+    return h*60 + (m||0);
+}
+
+function formatTime(min){
+    if(min <= 0) return "ahora";
+
+    if(min < 60) return `${min} min`;
+
+    const h = Math.floor(min/60);
+    const m = min%60;
+
+    if(h < 24){
+        return m === 0 ? `${h} h` : `${h} h ${m} min`;
+    }
+
+    const d = Math.floor(h/24);
+    const rh = h%24;
+
+    return rh === 0 ? `${d} día${d>1?"s":""}` : `${d} día${d>1?"s":""} ${rh} h`;
 }
 
 /* ================= DATA ================= */
@@ -128,13 +149,12 @@ function icono(cat){
     if(c.includes("emerg")) return base+"emergencias.png";
     if(c.includes("electric")) return base+"electricista.png";
     if(c.includes("gas")) return base+"gasista.png";
-    if(c.includes("carpint")) return base+"carpintero.png";
-    if(c.includes("pint")) return base+"pintor.png";
+    if(c.includes("veter")) return base+"veterinaria.png";
 
     return base+"default.png";
 }
 
-/* ================= HORARIO UNIVERSAL ================= */
+/* ================= HORARIOS ================= */
 function estadoHorario(h){
 
     if(!h || h === "sin horario"){
@@ -149,72 +169,44 @@ function estadoHorario(h){
     const hoy = dias[ahora.getDay()];
     const minutos = ahora.getHours()*60 + ahora.getMinutes();
 
-    let data = h[hoy];
+    if(h === "24h" || h === "24 horas"){
+        return {
+            estado:"abierto",
+            texto:"🟢 Abierto todo el día"
+        };
+    }
 
-    /* ===== STRING ===== */
-    if(typeof data === "string"){
+    const dia = h[hoy];
 
-        if(data.toLowerCase()==="cerrado")
-            return {estado:"cerrado", texto:"🔴 Cerrado"};
-
-        if(data.includes("24") || data==="00:00-00:00")
-            return {estado:"abierto", texto:"🟢 Abierto todo el día"};
-
-        const m = data.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
-        if(!m) return {estado:"abierto", texto:"🟢 Abierto"};
-
-        let ini = parseInt(m[1])*60 + (m[2]?parseInt(m[2]):0);
-        let fin = parseInt(m[3])*60 + (m[4]?parseInt(m[4]):0);
-
-        if(minutos >= ini && minutos < fin){
-            return {
-                estado:"abierto",
-                texto:`🟢 Abierto · cierra en ${fin-minutos} min`
-            };
-        }
-
-        if(minutos < ini){
-            return {
-                estado:"cerrado",
-                texto:`🔴 Cerrado · abre en ${ini-minutos} min`
-            };
-        }
-
+    if(!dia || dia === "cerrado"){
         return {estado:"cerrado", texto:"🔴 Cerrado"};
     }
 
-    /* ===== OBJETO NUEVO ===== */
-    if(typeof data === "object" && data.abre){
+    const ini = parseTime(dia.abre);
+    const fin = parseTime(dia.cierra);
 
-        let [h1,m1]=data.abre.split(":").map(Number);
-        let [h2,m2]=data.cierra.split(":").map(Number);
+    if(minutos >= ini && minutos < fin){
+        return {
+            estado:"abierto",
+            texto:`🟢 Abierto · cierra en ${formatTime(fin-minutos)}`
+        };
+    }
 
-        let ini = h1*60 + (m1||0);
-        let fin = h2*60 + (m2||0);
-
-        if(minutos >= ini && minutos < fin){
-            return {
-                estado:"abierto",
-                texto:`🟢 Abierto · cierra en ${fin-minutos} min`
-            };
-        }
-
-        if(minutos < ini){
-            return {
-                estado:"cerrado",
-                texto:`🔴 Cerrado · abre en ${ini-minutos} min`
-            };
-        }
+    if(minutos < ini){
+        return {
+            estado:"cerrado",
+            texto:`🔴 Cerrado · abre en ${formatTime(ini-minutos)}`
+        };
     }
 
     return {estado:"cerrado", texto:"🔴 Cerrado"};
 }
 
 /* ================= AGRUPAR ================= */
-function agrupar(lista){
+function agrupar(list){
     const g={};
-    lista.forEach(p=>{
-        const c = p.categoria || "Otros";
+    list.forEach(p=>{
+        const c=p.categoria||"Otros";
         if(!g[c]) g[c]=[];
         g[c].push(p);
     });
@@ -231,25 +223,24 @@ function renderCategorias(){
 
     contenedor.innerHTML = Object.keys(grupos).map(cat=>`
         <div class="card-cat" data-cat="${cat}">
-            <img src="${icono(cat)}" width="45">
+            <img src="${icono(cat)}" width="40">
             <div>${cat}</div>
         </div>
     `).join("");
 }
 
-/* CLICK FIX */
-contenedor.addEventListener("click",(e)=>{
-    const card = e.target.closest(".card-cat");
-    if(!card) return;
-
-    categoriaActual = card.dataset.cat;
+/* FIX CLICK */
+contenedor.onclick = (e)=>{
+    const c = e.target.closest(".card-cat");
+    if(!c) return;
+    categoriaActual = norm(c.dataset.cat);
     verCategoria();
-});
+};
 
 function verCategoria(){
     vista="lista";
     volver.style.display="block";
-    renderLista(filtrar(profesionales));
+    renderLista();
 }
 
 /* ================= FILTRO ================= */
@@ -258,23 +249,21 @@ function filtrar(list){
 
     return list.filter(p=>{
         const txt = `
-            ${p.nombre}
-            ${p.categoria}
-            ${(p.tags||[]).join(" ")}
-            ${p.ciudad}
-            ${p.direccion}
+        ${p.nombre}
+        ${p.categoria}
+        ${(p.tags||[]).join(" ")}
+        ${p.ciudad}
+        ${p.direccion}
         `.toLowerCase();
 
-        if(vista==="lista"){
-            return norm(p.categoria) === norm(categoriaActual) && txt.includes(t);
-        }
-
-        return txt.includes(t);
+        return norm(p.categoria)===categoriaActual && txt.includes(t);
     });
 }
 
-/* ================= RENDER ================= */
-function renderLista(list){
+/* ================= LISTA ================= */
+function renderLista(){
+
+    const list = filtrar(profesionales);
 
     contenedor.innerHTML = list.map(p=>{
         const e = estadoHorario(p.horario);
@@ -282,25 +271,25 @@ function renderLista(list){
         return `
         <div class="card-prof">
 
-            <img src="${icono(p.categoria)}" width="40">
-
             <b>${p.nombre}</b>
             <div class="badge">${p.categoria}</div>
 
-            <p>📍 ${p.ciudad || ""}</p>
-            <p>🏠 ${p.direccion || ""}</p>
+            <p>📍 ${p.ciudad||""}</p>
+            <p>🏠 ${p.direccion||""}</p>
 
             <p style="font-weight:bold;margin-top:6px;">
                 ${e.texto}
             </p>
 
-            <a class="btn btn-tel" href="tel:${p.telefono}">
+            <button class="btn btn-call"
+                onclick="location.href='tel:${p.telefono}'">
                 📞 Llamar
-            </a>
+            </button>
 
-            <a class="btn btn-wa" href="https://wa.me/${p.whatsapp}" target="_blank">
-                💬 WhatsApp
-            </a>
+            <button class="btn btn-wa"
+                onclick="window.open('https://wa.me/${p.whatsapp}','_blank')">
+                WhatsApp
+            </button>
 
         </div>
         `;
@@ -308,13 +297,13 @@ function renderLista(list){
 }
 
 /* ================= BUSCADOR ================= */
-buscador.oninput=()=>{
+buscador.oninput = ()=>{
     if(vista==="categorias") renderCategorias();
-    else renderLista(filtrar(profesionales));
+    else renderLista();
 };
 
 /* ================= VOLVER ================= */
-volver.onclick=()=>{
+volver.onclick = ()=>{
     buscador.value="";
     renderCategorias();
 };
