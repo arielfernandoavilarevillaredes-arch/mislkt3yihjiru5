@@ -19,86 +19,90 @@ body{
 
 header{
     text-align:center;
-    padding:35px 20px;
+    padding:30px 20px;
     background:rgba(255,255,255,.05);
     backdrop-filter:blur(12px);
     border-bottom:1px solid rgba(255,255,255,.08);
 }
 
-header h2{
-    font-size:2rem;
-    margin-bottom:12px;
+h2{
+    margin-bottom:10px;
 }
 
-input{
-    width:min(600px,90%);
-    padding:12px 16px;
+#volver{
+    display:none;
+    margin-top:10px;
+    padding:8px 14px;
     border:none;
-    border-radius:12px;
-    background:rgba(255,255,255,.12);
+    border-radius:10px;
+    cursor:pointer;
+    background:#3b82f6;
     color:white;
-    font-size:15px;
-    outline:none;
-    transition:.3s;
-}
-
-input::placeholder{
-    color:#cbd5e1;
-}
-
-input:focus{
-    background:rgba(255,255,255,.18);
-    box-shadow:0 0 0 3px rgba(59,130,246,.3);
+    font-weight:bold;
 }
 
 #contenedor{
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(190px, 1fr));
-    gap:14px;
+    grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+    gap:12px;
     padding:20px;
 }
 
-.card{
+/* CATEGORÍAS */
+.card-cat{
     background:rgba(255,255,255,.08);
-    backdrop-filter:blur(15px);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    padding:15px;
+    cursor:pointer;
+    transition:.3s;
+    text-align:center;
+}
+
+.card-cat:hover{
+    transform:translateY(-6px);
+    background:rgba(255,255,255,.12);
+}
+
+.card-cat img{
+    width:55px;
+    height:55px;
+    object-fit:contain;
+    margin-bottom:8px;
+}
+
+.card-cat .nombre{
+    font-weight:bold;
+    font-size:14px;
+}
+
+/* PROFESIONALES */
+.card-prof{
+    background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.08);
     border-radius:14px;
     padding:12px;
-    transition:.3s;
     font-size:13px;
 }
 
-.card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 15px 30px rgba(0,0,0,.35);
-}
-
-.card h3{
+.card-prof h3{
     font-size:15px;
     margin-bottom:6px;
 }
 
-.card b{
-    display:block;
-    margin-bottom:6px;
-    color:#93c5fd;
-}
-
-.card p{
+.card-prof p{
     color:#cbd5e1;
-    line-height:1.4;
     margin-bottom:4px;
 }
 
-.card a{
+.card-prof a{
     display:inline-block;
-    margin-top:10px;
-    padding:8px 10px;
+    margin-top:8px;
+    padding:6px 10px;
     background:linear-gradient(135deg,#3b82f6,#06b6d4);
     color:white;
     text-decoration:none;
-    border-radius:10px;
-    font-weight:600;
+    border-radius:8px;
     font-size:12px;
     margin-right:5px;
 }
@@ -106,43 +110,73 @@ input:focus{
 
 <header>
     <h2>Servicios Río Colorado</h2>
-    <input id="buscar" placeholder="Buscar profesional o rubro...">
+    <button id="volver">⬅ Volver</button>
 </header>
 
 <div id="contenedor">Cargando...</div>
 `;
 
 const contenedor = document.getElementById("contenedor");
-const buscar = document.getElementById("buscar");
+const volver = document.getElementById("volver");
 
 // ===== CARGAR DATOS =====
 fetch(DATA_URL)
     .then(res => res.json())
     .then(data => {
-        profesionales = ordenarPorCategoria(data);
-        render(profesionales);
-    })
-    .catch(err => {
-        contenedor.innerHTML = "Error cargando datos";
-        console.log(err);
+        profesionales = data;
+        renderCategorias();
     });
 
-// ===== ORDEN POR CATEGORÍA =====
-function ordenarPorCategoria(lista) {
-    return lista.sort((a, b) =>
-        (a.categoria || "").localeCompare(b.categoria || "")
-    );
+// ===== ICONOS PNG POR CATEGORÍA =====
+function icono(cat) {
+    const c = cat.toLowerCase();
+
+    if (c.includes("plom")) return "icons/plomero.png";
+    if (c.includes("electric")) return "icons/electricista.png";
+    if (c.includes("gas")) return "icons/gasista.png";
+    if (c.includes("carpint")) return "icons/carpintero.png";
+    if (c.includes("pint")) return "icons/pintor.png";
+
+    return "icons/default.png";
 }
 
-// ===== RENDER =====
-function render(lista) {
-    contenedor.innerHTML = lista.map(p => `
-        <div class="card">
+// ===== AGRUPAR =====
+function agruparPorCategoria(lista) {
+    const grupos = {};
+
+    lista.forEach(p => {
+        const cat = p.categoria || "Otros";
+        if (!grupos[cat]) grupos[cat] = [];
+        grupos[cat].push(p);
+    });
+
+    return grupos;
+}
+
+// ===== RENDER CATEGORÍAS =====
+function renderCategorias() {
+    volver.style.display = "none";
+
+    const grupos = agruparPorCategoria(profesionales);
+
+    contenedor.innerHTML = Object.keys(grupos).sort().map(cat => `
+        <div class="card-cat" onclick="verCategoria('${cat}')">
+            <img src="${icono(cat)}" alt="${cat}">
+            <div class="nombre">${cat}</div>
+        </div>
+    `).join("");
+}
+
+// ===== VER PROFESIONALES =====
+function verCategoria(cat) {
+    volver.style.display = "inline-block";
+
+    const filtrados = profesionales.filter(p => p.categoria === cat);
+
+    contenedor.innerHTML = filtrados.map(p => `
+        <div class="card-prof">
             <h3>${p.nombre}</h3>
-            <b>${p.categoria}</b>
-
-            <p>${(p.tags || []).join(", ")}</p>
-
+            <p><b>${p.categoria}</b></p>
             <p>📍 ${p.ciudad || "Sin ciudad"}</p>
             <p>🏠 ${p.direccion || "Sin dirección"}</p>
 
@@ -152,15 +186,5 @@ function render(lista) {
     `).join("");
 }
 
-// ===== BUSCADOR =====
-buscar.addEventListener("input", () => {
-    const t = buscar.value.toLowerCase();
-
-    const filtrados = profesionales.filter(p =>
-        p.nombre.toLowerCase().includes(t) ||
-        p.categoria.toLowerCase().includes(t) ||
-        (p.tags || []).join(" ").toLowerCase().includes(t)
-    );
-
-    render(filtrados);
-});
+// ===== VOLVER =====
+volver.onclick = () => renderCategorias();
