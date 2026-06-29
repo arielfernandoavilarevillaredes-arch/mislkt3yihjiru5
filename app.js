@@ -175,17 +175,18 @@ fetch(DATA_URL)
 
 // ===== ICONOS =====
 function icono(cat) {
-    const c = norm(cat);
+    const base = "https://arielfernandoavilarevillaredes-arch.github.io/mislkt3yihjiru5/icons/";
+    const c = (cat || "").toLowerCase().trim().replace(/\s+/g, " ");
 
-    if (c.includes("plom")) return "icons/plomero.png";
-    if (c.includes("comput") || c.includes("celular")) return "icons/computadora.png";
-    if (c.includes("emergencia")) return "icons/emergencias.png";
-    if (c.includes("electric")) return "icons/electricista.png";
-    if (c.includes("gas")) return "icons/gasista.png";
-    if (c.includes("carpint")) return "icons/carpintero.png";
-    if (c.includes("pint")) return "icons/pintor.png";
+    if (c.includes("plom")) return base + "plomero.png";
+    if (c.includes("comput") || c.includes("celular")) return base + "computadora.png";
+    if (c.includes("emergencia")) return base + "emergencias.png";
+    if (c.includes("electric")) return base + "electricista.png";
+    if (c.includes("gas")) return base + "gasista.png";
+    if (c.includes("carpint")) return base + "carpintero.png";
+    if (c.includes("pint")) return base + "pintor.png";
 
-    return "icons/default.png";
+    return base + "default.png";
 }
 
 // ===== HORARIO PRO =====
