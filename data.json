@@ -7,20 +7,20 @@
     "whatsapp": "5492920456789",
     "ciudad": "Río Colorado",
     "direccion": "Av. San Martín 123",
+    "horario_tipo": "normal",
     "horario": {
-      "lunes": "08:00-18:00",
-      "martes": "08:00-18:00",
-      "miércoles": "08:00-18:00",
-      "jueves": "08:00-18:00",
-      "viernes": "08:00-18:00",
-      "sábado": "09:00-13:00",
+      "lunes": { "abre": "08:00", "cierra": "18:00" },
+      "martes": { "abre": "08:00", "cierra": "18:00" },
+      "miércoles": { "abre": "08:00", "cierra": "18:00" },
+      "jueves": { "abre": "08:00", "cierra": "18:00" },
+      "viernes": { "abre": "08:00", "cierra": "18:00" },
+      "sábado": { "abre": "09:00", "cierra": "13:00" },
       "domingo": "cerrado"
     },
     "rating": 4.8,
     "activo": true,
     "foto": ""
   },
-
 
   {
     "nombre": "AFAR Computación",
@@ -30,27 +30,20 @@
     "whatsapp": "2931 400906",
     "ciudad": "Río Colorado",
     "direccion": "Belgrano",
+    "horario_tipo": "normal",
     "horario": {
-      "lunes": "10:00-20:00",
-      "martes": "10:00-20:00",
-      "miércoles": "10:00-20:00",
-      "jueves": "10:00-20:00",
-      "viernes": "10:00-20:00",
-      "sábado": "10:00-13:00",
-      "domingo": "10:00-13:00"
+      "lunes": { "abre": "10:00", "cierra": "20:00" },
+      "martes": { "abre": "10:00", "cierra": "20:00" },
+      "miércoles": { "abre": "10:00", "cierra": "20:00" },
+      "jueves": { "abre": "10:00", "cierra": "20:00" },
+      "viernes": { "abre": "10:00", "cierra": "20:00" },
+      "sábado": { "abre": "10:00", "cierra": "13:00" },
+      "domingo": { "abre": "10:00", "cierra": "13:00" }
     },
     "rating": 4.8,
     "activo": true,
     "foto": ""
   },
-
-
-
-
-
-
-
-
 
   {
     "nombre": "Policia (comisaria 11)",
@@ -60,23 +53,12 @@
     "whatsapp": "5492920555511",
     "ciudad": "Río Colorado",
     "direccion": "Belgrano 456",
-    "horario": {
-      "lunes": "00:00-00:00",
-      "martes": "09:00-00:00",
-      "miércoles": "09:00-00:00",
-      "jueves": "09:00-00:00",
-      "viernes": "09:00-00:00",
-      "sábado": "09:00-00:00",
-      "domingo": "09:00-00:00"
-    },
+    "horario_tipo": "24h",
+    "horario": "sin horario",
     "rating": 4.6,
     "activo": true,
     "foto": ""
   },
-
-
-
-
 
   {
     "nombre": "Gasista Matriculado",
@@ -86,19 +68,13 @@
     "whatsapp": "5492920987654",
     "ciudad": "Río Colorado",
     "direccion": "Mitre 789",
-    "horario": {
-      "lunes": "24 horas",
-      "martes": "24 horas",
-      "miércoles": "24 horas",
-      "jueves": "24 horas",
-      "viernes": "24 horas",
-      "sábado": "24 horas",
-      "domingo": "24 horas"
-    },
+    "horario_tipo": "24h",
+    "horario": "sin horario",
     "rating": 4.9,
     "activo": true,
     "foto": ""
   },
+
   {
     "nombre": "Veterinaria Patitas",
     "categoria": "Veterinaria",
@@ -107,13 +83,14 @@
     "whatsapp": "5492920445566",
     "ciudad": "Río Colorado",
     "direccion": "Sarmiento 321",
+    "horario_tipo": "normal",
     "horario": {
-      "lunes": "10:00-20:00",
-      "martes": "10:00-20:00",
-      "miércoles": "10:00-20:00",
-      "jueves": "10:00-20:00",
-      "viernes": "10:00-20:00",
-      "sábado": "10:00-14:00",
+      "lunes": { "abre": "10:00", "cierra": "20:00" },
+      "martes": { "abre": "10:00", "cierra": "20:00" },
+      "miércoles": { "abre": "10:00", "cierra": "20:00" },
+      "jueves": { "abre": "10:00", "cierra": "20:00" },
+      "viernes": { "abre": "10:00", "cierra": "20:00" },
+      "sábado": { "abre": "10:00", "cierra": "14:00" },
       "domingo": "cerrado"
     },
     "rating": 4.7,
