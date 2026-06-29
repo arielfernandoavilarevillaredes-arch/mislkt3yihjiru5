@@ -1,6 +1,8 @@
 const DATA_URL = "https://arielfernandoavilarevillaredes-arch.github.io/mislkt3yihjiru5/data.json";
 
 let profesionales = [];
+let vista = "categorias";
+let categoriaActual = null;
 
 document.body.innerHTML = `
 <style>
@@ -11,15 +13,16 @@ document.body.innerHTML = `
 }
 
 body{
-    font-family: "Segoe UI", Arial, sans-serif;
+    font-family:"Segoe UI", Arial, sans-serif;
     background: linear-gradient(135deg,#0f172a,#1e293b,#111827);
     min-height:100vh;
     color:white;
 }
 
+/* HEADER */
 header{
     text-align:center;
-    padding:30px 20px;
+    padding:25px 15px;
     background:rgba(255,255,255,.05);
     backdrop-filter:blur(12px);
     border-bottom:1px solid rgba(255,255,255,.08);
@@ -29,6 +32,23 @@ h2{
     margin-bottom:10px;
 }
 
+/* INPUTS */
+input{
+    width:min(600px,90%);
+    padding:10px 14px;
+    border:none;
+    border-radius:10px;
+    background:rgba(255,255,255,.12);
+    color:white;
+    outline:none;
+    margin:5px;
+}
+
+input::placeholder{
+    color:#cbd5e1;
+}
+
+/* BOTÓN VOLVER */
 #volver{
     display:none;
     margin-top:10px;
@@ -41,9 +61,10 @@ h2{
     font-weight:bold;
 }
 
+/* GRID */
 #contenedor{
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns:repeat(auto-fill, minmax(170px, 1fr));
     gap:12px;
     padding:20px;
 }
@@ -71,11 +92,6 @@ h2{
     margin-bottom:8px;
 }
 
-.card-cat .nombre{
-    font-weight:bold;
-    font-size:14px;
-}
-
 /* PROFESIONALES */
 .card-prof{
     background:rgba(255,255,255,.08);
@@ -85,9 +101,26 @@ h2{
     font-size:13px;
 }
 
-.card-prof h3{
-    font-size:15px;
-    margin-bottom:6px;
+.prof-top{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+}
+
+.prof-top img{
+    width:35px;
+    height:35px;
+}
+
+.badge{
+    display:inline-block;
+    padding:3px 8px;
+    font-size:11px;
+    border-radius:999px;
+    background:rgba(59,130,246,.25);
+    color:#93c5fd;
+    margin-top:3px;
 }
 
 .card-prof p{
@@ -110,6 +143,10 @@ h2{
 
 <header>
     <h2>Servicios Río Colorado</h2>
+
+    <input id="busquedaGlobal" placeholder="Buscar categoría o profesional...">
+    <input id="busquedaLocal" placeholder="Buscar dentro de categoría..." style="display:none;">
+
     <button id="volver">⬅ Volver</button>
 </header>
 
@@ -118,8 +155,10 @@ h2{
 
 const contenedor = document.getElementById("contenedor");
 const volver = document.getElementById("volver");
+const busquedaGlobal = document.getElementById("busquedaGlobal");
+const busquedaLocal = document.getElementById("busquedaLocal");
 
-// ===== CARGAR DATOS =====
+// ===== CARGA =====
 fetch(DATA_URL)
     .then(res => res.json())
     .then(data => {
@@ -127,7 +166,7 @@ fetch(DATA_URL)
         renderCategorias();
     });
 
-// ===== ICONOS PNG POR CATEGORÍA =====
+// ===== ICONOS =====
 function icono(cat) {
     const c = cat.toLowerCase();
 
@@ -141,42 +180,58 @@ function icono(cat) {
 }
 
 // ===== AGRUPAR =====
-function agruparPorCategoria(lista) {
-    const grupos = {};
-
+function agrupar(lista) {
+    const g = {};
     lista.forEach(p => {
-        const cat = p.categoria || "Otros";
-        if (!grupos[cat]) grupos[cat] = [];
-        grupos[cat].push(p);
+        const c = p.categoria || "Otros";
+        if (!g[c]) g[c] = [];
+        g[c].push(p);
     });
-
-    return grupos;
+    return g;
 }
 
-// ===== RENDER CATEGORÍAS =====
+// ===== CATEGORÍAS =====
 function renderCategorias() {
-    volver.style.display = "none";
+    vista = "categorias";
+    categoriaActual = null;
 
-    const grupos = agruparPorCategoria(profesionales);
+    volver.style.display = "none";
+    busquedaLocal.style.display = "none";
+
+    const grupos = agrupar(profesionales);
 
     contenedor.innerHTML = Object.keys(grupos).sort().map(cat => `
         <div class="card-cat" onclick="verCategoria('${cat}')">
-            <img src="${icono(cat)}" alt="${cat}">
-            <div class="nombre">${cat}</div>
+            <img src="${icono(cat)}">
+            <div>${cat}</div>
         </div>
     `).join("");
 }
 
-// ===== VER PROFESIONALES =====
+// ===== LISTA PROFESIONALES =====
 function verCategoria(cat) {
+    vista = "lista";
+    categoriaActual = cat;
+
     volver.style.display = "inline-block";
+    busquedaLocal.style.display = "inline-block";
 
-    const filtrados = profesionales.filter(p => p.categoria === cat);
+    renderLista(profesionales.filter(p => p.categoria === cat));
+}
 
-    contenedor.innerHTML = filtrados.map(p => `
+// ===== RENDER LISTA =====
+function renderLista(lista) {
+    contenedor.innerHTML = lista.map(p => `
         <div class="card-prof">
-            <h3>${p.nombre}</h3>
-            <p><b>${p.categoria}</b></p>
+
+            <div class="prof-top">
+                <img src="${icono(p.categoria)}">
+                <div>
+                    <b>${p.nombre}</b>
+                    <div class="badge">${p.categoria}</div>
+                </div>
+            </div>
+
             <p>📍 ${p.ciudad || "Sin ciudad"}</p>
             <p>🏠 ${p.direccion || "Sin dirección"}</p>
 
@@ -186,5 +241,54 @@ function verCategoria(cat) {
     `).join("");
 }
 
+// ===== BUSCADOR GLOBAL =====
+busquedaGlobal.addEventListener("input", e => {
+    const t = e.target.value.toLowerCase();
+
+    if (vista === "categorias") {
+        const grupos = agrupar(profesionales);
+
+        const filtradas = Object.keys(grupos).filter(cat =>
+            cat.toLowerCase().includes(t)
+        );
+
+        contenedor.innerHTML = filtradas.map(cat => `
+            <div class="card-cat" onclick="verCategoria('${cat}')">
+                <img src="${icono(cat)}">
+                <div>${cat}</div>
+            </div>
+        `).join("");
+    } else {
+        const filtrados = profesionales.filter(p =>
+            p.categoria === categoriaActual &&
+            (
+                p.nombre.toLowerCase().includes(t) ||
+                (p.tags || []).join(" ").toLowerCase().includes(t)
+            )
+        );
+
+        renderLista(filtrados);
+    }
+});
+
+// ===== BUSCADOR LOCAL =====
+busquedaLocal.addEventListener("input", e => {
+    const t = e.target.value.toLowerCase();
+
+    const filtrados = profesionales.filter(p =>
+        p.categoria === categoriaActual &&
+        (
+            p.nombre.toLowerCase().includes(t) ||
+            (p.tags || []).join(" ").toLowerCase().includes(t)
+        )
+    );
+
+    renderLista(filtrados);
+});
+
 // ===== VOLVER =====
-volver.onclick = () => renderCategorias();
+volver.onclick = () => {
+    busquedaGlobal.value = "";
+    busquedaLocal.value = "";
+    renderCategorias();
+};
