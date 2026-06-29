@@ -99,7 +99,6 @@ input::placeholder{
     padding:12px;
     border:1px solid rgba(255,255,255,.08);
     transition:.25s ease;
-    cursor:pointer;
 }
 
 .card-prof:hover{
@@ -161,6 +160,11 @@ const contenedor = document.getElementById("contenedor");
 const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
+// ===== NORMALIZAR (FIX CRÍTICO) =====
+function norm(t) {
+    return (t || "").toLowerCase().trim();
+}
+
 // ===== CARGA =====
 fetch(DATA_URL)
     .then(r => r.json())
@@ -171,9 +175,11 @@ fetch(DATA_URL)
 
 // ===== ICONOS =====
 function icono(cat) {
-    const c = cat.toLowerCase();
+    const c = norm(cat);
 
     if (c.includes("plom")) return "icons/plomero.png";
+    if (c.includes("comput") || c.includes("celular")) return "icons/computadora.png";
+    if (c.includes("emergencia")) return "icons/emergencias.png";
     if (c.includes("electric")) return "icons/electricista.png";
     if (c.includes("gas")) return "icons/gasista.png";
     if (c.includes("carpint")) return "icons/carpintero.png";
@@ -279,7 +285,6 @@ function agrupar(lista) {
 // ===== ORDEN POR APERTURA =====
 function tiempoApertura(p) {
     const e = estadoHorario(p.horario);
-
     if (e.cierraEn != null) return 0;
     if (e.abreEn != null) return e.abreEn;
     return 999999;
@@ -302,26 +307,24 @@ function renderCategorias() {
     `).join("");
 }
 
-// ===== CLICK CATEGORÍAS =====
+// ===== CLICK =====
 contenedor.addEventListener("click", (e) => {
     const card = e.target.closest(".card-cat");
     if (!card) return;
-    verCategoria(card.dataset.cat);
+    categoriaActual = norm(card.dataset.cat);
+    verCategoria();
 });
 
 // ===== VER CATEGORÍA =====
-function verCategoria(cat) {
+function verCategoria() {
     vista = "lista";
-    categoriaActual = cat;
-
     volver.style.display = "inline-block";
-
     renderLista(filtrar(profesionales));
 }
 
 // ===== FILTRO =====
 function filtrar(lista) {
-    const t = buscador.value.toLowerCase();
+    const t = norm(buscador.value);
 
     return lista.filter(p => {
         const texto = `
@@ -333,7 +336,7 @@ function filtrar(lista) {
         `.toLowerCase();
 
         if (vista === "lista") {
-            return p.categoria === categoriaActual && texto.includes(t);
+            return norm(p.categoria) === categoriaActual && texto.includes(t);
         }
 
         return texto.includes(t);
@@ -343,8 +346,7 @@ function filtrar(lista) {
 // ===== RENDER LISTA =====
 function renderLista(lista) {
 
-    // 🔥 ORDEN POR “MÁS CERCANO A ABRIR”
-    lista = [...lista].sort((a, b) => tiempoApertura(a) - tiempoApertura(b));
+    lista = [...lista].sort((a,b) => tiempoApertura(a) - tiempoApertura(b));
 
     contenedor.innerHTML = lista.map(p => {
 
@@ -385,7 +387,7 @@ buscador.addEventListener("input", () => {
         const grupos = agrupar(profesionales);
 
         const filtradas = Object.keys(grupos).filter(cat =>
-            cat.toLowerCase().includes(buscador.value.toLowerCase())
+            norm(cat).includes(norm(buscador.value))
         );
 
         contenedor.innerHTML = filtradas.map(cat => `
