@@ -7,6 +7,7 @@ let categoriaActual = null;
 document.body.innerHTML = `
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
+
 body{
     font-family:"Segoe UI", Arial, sans-serif;
     background: linear-gradient(135deg,#0f172a,#1e293b,#111827);
@@ -19,14 +20,13 @@ header{
     padding:25px 15px;
     background:rgba(255,255,255,.05);
     backdrop-filter:blur(12px);
-    border-bottom:1px solid rgba(255,255,255,.08);
 }
 
 h2{margin-bottom:10px;}
 
 input{
     width:min(650px,90%);
-    padding:11px 14px;
+    padding:11px;
     border:none;
     border-radius:10px;
     background:rgba(255,255,255,.12);
@@ -48,7 +48,7 @@ input{
 
 #contenedor{
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
     gap:12px;
     padding:20px;
 }
@@ -57,11 +57,11 @@ input{
     background:rgba(255,255,255,.08);
     border-radius:14px;
     padding:12px;
-    transition:.2s;
     cursor:pointer;
+    transition:.2s;
 }
 
-.card-prof:hover,.card-cat:hover{
+.card-cat:hover,.card-prof:hover{
     transform:scale(1.03);
     background:rgba(255,255,255,.12);
 }
@@ -112,10 +112,9 @@ function icono(cat){
     return base+"default.png";
 }
 
-// ================= HORARIOS =================
+// ================= HORARIOS (FIX REAL) =================
 function estadoHorario(h){
 
-    // 🔥 SIN HORARIO = SIEMPRE ABIERTO
     if(!h || h === "sin horario"){
         return {estado:"abierto", texto:"🟢 Abierto todo el día"};
     }
@@ -123,7 +122,7 @@ function estadoHorario(h){
     const ahora = new Date();
     const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
     const hoy = dias[ahora.getDay()];
-    const hora = ahora.getHours()*60 + ahora.getMinutes();
+    const minutos = ahora.getHours()*60 + ahora.getMinutes();
 
     const txt = h[hoy];
 
@@ -131,28 +130,30 @@ function estadoHorario(h){
         return {estado:"cerrado", texto:"🔴 Cerrado"};
     }
 
-    if(txt.includes("24") || txt.includes("00:00-00:00")){
+    if(txt.includes("24") || txt==="00:00-00:00"){
         return {estado:"abierto", texto:"🟢 Abierto todo el día"};
     }
 
     const m = txt.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
 
-    if(!m) return {estado:"abierto", texto:"🟢 Abierto"};
+    if(!m){
+        return {estado:"abierto", texto:"🟢 Abierto"};
+    }
 
     let ini = parseInt(m[1])*60 + (m[2]?parseInt(m[2]):0);
     let fin = parseInt(m[3])*60 + (m[4]?parseInt(m[4]):0);
 
-    if(hora >= ini && hora < fin){
+    if(minutos >= ini && minutos < fin){
         return {
             estado:"abierto",
-            texto:`🟢 Abierto · cierra en ${fin-hora} min`
+            texto:`🟢 Abierto · cierra en ${fin-minutos} min`
         };
     }
 
-    if(hora < ini){
+    if(minutos < ini){
         return {
             estado:"cerrado",
-            texto:`🔴 Cerrado · abre en ${ini-hora} min`
+            texto:`🔴 Cerrado · abre en ${ini-minutos} min`
         };
     }
 
@@ -170,7 +171,7 @@ function agrupar(lista){
     return g;
 }
 
-// ================= CATEGORÍAS =================
+// ================= UI =================
 function renderCategorias(){
     vista="categorias";
     categoriaActual=null;
@@ -180,12 +181,12 @@ function renderCategorias(){
 
     contenedor.innerHTML = Object.keys(grupos).map(cat=>`
         <div class="card-cat" data-cat="${cat}">
+            <img src="${icono(cat)}" width="40">
             <div>${cat}</div>
         </div>
     `).join("");
 }
 
-// ================= CLICK =================
 contenedor.onclick = (e)=>{
     const c = e.target.closest(".card-cat");
     if(!c) return;
@@ -209,14 +210,13 @@ function filtrar(list){
         if(vista==="lista"){
             return norm(p.categoria)===categoriaActual && txt.includes(t);
         }
+
         return txt.includes(t);
     });
 }
 
 // ================= RENDER =================
 function renderLista(list){
-
-    list = [...list];
 
     contenedor.innerHTML = list.map(p=>{
         const e = estadoHorario(p.horario);
@@ -229,7 +229,7 @@ function renderLista(list){
             <p>📍 ${p.ciudad || ""}</p>
             <p>🏠 ${p.direccion || ""}</p>
 
-            <p style="margin-top:6px;font-weight:bold;">
+            <p style="font-weight:bold;margin-top:6px;">
                 ${e.texto}
             </p>
 
