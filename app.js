@@ -160,7 +160,7 @@ const contenedor = document.getElementById("contenedor");
 const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
-// ===== NORMALIZAR (FIX CRÍTICO) =====
+// ===== NORMALIZAR =====
 function norm(t) {
     return (t || "").toLowerCase().trim();
 }
@@ -176,7 +176,7 @@ fetch(DATA_URL)
 // ===== ICONOS =====
 function icono(cat) {
     const base = "https://arielfernandoavilarevillaredes-arch.github.io/mislkt3yihjiru5/icons/";
-    const c = (cat || "").toLowerCase().trim().replace(/\s+/g, " ");
+    const c = norm(cat);
 
     if (c.includes("plom")) return base + "plomero.png";
     if (c.includes("comput") || c.includes("celular")) return base + "computadora.png";
@@ -189,14 +189,39 @@ function icono(cat) {
     return base + "default.png";
 }
 
+// ===== SIN HORARIO =====
+function esSinHorario(horario) {
+    if (!horario) return true;
+
+    if (typeof horario === "string") {
+        return horario.toLowerCase().trim() === "sin horario";
+    }
+
+    return false;
+}
+
 // ===== HORARIO PRO =====
 function estadoHorario(horario) {
+
+    // 🔥 SIN HORARIO = SIEMPRE ABIERTO
+    if (esSinHorario(horario)) {
+        return {
+            estado: "abierto",
+            texto: "🟢 Abierto todo el día (sin horario)"
+        };
+    }
+
     const ahora = new Date();
     const dia = ahora.getDay();
     const horaActual = ahora.getHours() * 60 + ahora.getMinutes();
 
     const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
     const hoy = dias[dia];
+
+    const texto =
+        typeof horario === "string"
+            ? horario
+            : horario?.[hoy];
 
     function parse(h) {
         const m = h.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
@@ -211,14 +236,15 @@ function estadoHorario(horario) {
         return { ini, fin };
     }
 
-    const texto = horario?.[hoy];
-
     if (!texto || texto.toLowerCase() === "cerrado") {
-        return buscarProximo(horario, dia);
+        return {
+            estado: "cerrado",
+            texto: "🔴 Cerrado"
+        };
     }
 
     if (texto.includes("24")) {
-        return { estado: "abierto" };
+        return { estado: "abierto", texto: "🟢 Abierto todo el día" };
     }
 
     const h = parse(texto);
@@ -238,29 +264,9 @@ function estadoHorario(horario) {
         };
     }
 
-    return buscarProximo(horario, dia);
-}
-
-// ===== PRÓXIMO DÍA =====
-function buscarProximo(horario, diaActual) {
-    const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
-
-    for (let i = 1; i <= 7; i++) {
-        const d = (diaActual + i) % 7;
-        const texto = horario?.[dias[d]];
-
-        if (texto && texto.toLowerCase() !== "cerrado") {
-            return {
-                estado: "cerrado",
-                abreEn: i * 24 * 60,
-                texto: `Abre el ${dias[d]}`
-            };
-        }
-    }
-
     return {
         estado: "cerrado",
-        texto: "Cerrado toda la semana"
+        texto: "🔴 Cerrado"
     };
 }
 
@@ -283,7 +289,7 @@ function agrupar(lista) {
     return g;
 }
 
-// ===== ORDEN POR APERTURA =====
+// ===== ORDEN =====
 function tiempoApertura(p) {
     const e = estadoHorario(p.horario);
     if (e.cierraEn != null) return 0;
@@ -316,7 +322,7 @@ contenedor.addEventListener("click", (e) => {
     verCategoria();
 });
 
-// ===== VER CATEGORÍA =====
+// ===== VER =====
 function verCategoria() {
     vista = "lista";
     volver.style.display = "inline-block";
@@ -344,7 +350,7 @@ function filtrar(lista) {
     });
 }
 
-// ===== RENDER LISTA =====
+// ===== RENDER =====
 function renderLista(lista) {
 
     lista = [...lista].sort((a,b) => tiempoApertura(a) - tiempoApertura(b));
@@ -368,12 +374,12 @@ function renderLista(lista) {
             <p>🏠 ${p.direccion || "Sin dirección"}</p>
 
             <p style="font-weight:bold;">
-                ${e.estado === "abierto" ? "🟢 Abierto ahora" : "🔴 Cerrado ahora"}
+                ${e.estado === "abierto" ? "🟢 Abierto" : "🔴 Cerrado"}
             </p>
 
-            ${e.cierraEn ? `<p style="color:#facc15">⏳ Cierra en ${formatearMinutos(e.cierraEn)}</p>` : ""}
-            ${e.abreEn ? `<p style="color:#38bdf8">⏱ Abre en ${formatearMinutos(e.abreEn)}</p>` : ""}
-            ${e.texto ? `<p style="color:#94a3b8">📅 ${e.texto}</p>` : ""}
+            ${e.cierraEn ? `<p>⏳ Cierra en ${formatearMinutos(e.cierraEn)}</p>` : ""}
+            ${e.abreEn ? `<p>⏱ Abre en ${formatearMinutos(e.abreEn)}</p>` : ""}
+            ${e.texto ? `<p>${e.texto}</p>` : ""}
 
             <a href="tel:${p.telefono}">Llamar</a>
             <a href="https://wa.me/${p.whatsapp}" target="_blank">WhatsApp</a>
