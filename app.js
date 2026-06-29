@@ -4,6 +4,7 @@ let profesionales = [];
 let vista = "categorias";
 let categoriaActual = null;
 
+/* ================= UI ================= */
 document.body.innerHTML = `
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -57,8 +58,8 @@ input{
     background:rgba(255,255,255,.08);
     border-radius:14px;
     padding:12px;
-    cursor:pointer;
     transition:.2s;
+    cursor:pointer;
 }
 
 .card-cat:hover,.card-prof:hover{
@@ -88,9 +89,10 @@ const contenedor = document.getElementById("contenedor");
 const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
+/* ================= HELP ================= */
 function norm(t){ return (t||"").toLowerCase().trim(); }
 
-// ================= DATA =================
+/* ================= DATA ================= */
 fetch(DATA_URL)
 .then(r=>r.json())
 .then(data=>{
@@ -98,7 +100,7 @@ fetch(DATA_URL)
     renderCategorias();
 });
 
-// ================= ICONOS =================
+/* ================= ICONOS ================= */
 function icono(cat){
     const base = "https://arielfernandoavilarevillaredes-arch.github.io/mislkt3yihjiru5/icons/";
     const c = norm(cat);
@@ -108,15 +110,17 @@ function icono(cat){
     if(c.includes("emerg")) return base+"emergencias.png";
     if(c.includes("electric")) return base+"electricista.png";
     if(c.includes("gas")) return base+"gasista.png";
+    if(c.includes("carpint")) return base+"carpintero.png";
+    if(c.includes("pint")) return base+"pintor.png";
 
     return base+"default.png";
 }
 
-// ================= HORARIOS (FIX REAL) =================
+/* ================= HORARIO ================= */
 function estadoHorario(h){
 
     if(!h || h === "sin horario"){
-        return {estado:"abierto", texto:"🟢 Abierto todo el día"};
+        return {estado:"abierto", texto:"🟢 Abierto todo el día (sin horario)"};
     }
 
     const ahora = new Date();
@@ -135,10 +139,7 @@ function estadoHorario(h){
     }
 
     const m = txt.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
-
-    if(!m){
-        return {estado:"abierto", texto:"🟢 Abierto"};
-    }
+    if(!m) return {estado:"abierto", texto:"🟢 Abierto"};
 
     let ini = parseInt(m[1])*60 + (m[2]?parseInt(m[2]):0);
     let fin = parseInt(m[3])*60 + (m[4]?parseInt(m[4]):0);
@@ -160,9 +161,9 @@ function estadoHorario(h){
     return {estado:"cerrado", texto:"🔴 Cerrado"};
 }
 
-// ================= AGRUPAR =================
+/* ================= AGRUPAR ================= */
 function agrupar(lista){
-    const g = {};
+    const g={};
     lista.forEach(p=>{
         const c = p.categoria || "Otros";
         if(!g[c]) g[c]=[];
@@ -171,7 +172,7 @@ function agrupar(lista){
     return g;
 }
 
-// ================= UI =================
+/* ================= CATEGORÍAS ================= */
 function renderCategorias(){
     vista="categorias";
     categoriaActual=null;
@@ -181,18 +182,20 @@ function renderCategorias(){
 
     contenedor.innerHTML = Object.keys(grupos).map(cat=>`
         <div class="card-cat" data-cat="${cat}">
-            <img src="${icono(cat)}" width="40">
+            <img src="${icono(cat)}" width="45">
             <div>${cat}</div>
         </div>
     `).join("");
 }
 
-contenedor.onclick = (e)=>{
-    const c = e.target.closest(".card-cat");
-    if(!c) return;
-    categoriaActual = norm(c.dataset.cat);
+/* CLICK CATEGORÍA (FIX) */
+contenedor.addEventListener("click",(e)=>{
+    const card = e.target.closest(".card-cat");
+    if(!card) return;
+
+    categoriaActual = norm(card.dataset.cat);
     verCategoria();
-};
+});
 
 function verCategoria(){
     vista="lista";
@@ -200,12 +203,18 @@ function verCategoria(){
     renderLista(filtrar(profesionales));
 }
 
-// ================= FILTRO =================
+/* ================= FILTRO ================= */
 function filtrar(list){
     const t = norm(buscador.value);
 
     return list.filter(p=>{
-        const txt = `${p.nombre} ${p.categoria} ${(p.tags||[]).join(" ")} ${p.ciudad} ${p.direccion}`.toLowerCase();
+        const txt = `
+            ${p.nombre}
+            ${p.categoria}
+            ${(p.tags||[]).join(" ")}
+            ${p.ciudad}
+            ${p.direccion}
+        `.toLowerCase();
 
         if(vista==="lista"){
             return norm(p.categoria)===categoriaActual && txt.includes(t);
@@ -215,7 +224,7 @@ function filtrar(list){
     });
 }
 
-// ================= RENDER =================
+/* ================= RENDER ================= */
 function renderLista(list){
 
     contenedor.innerHTML = list.map(p=>{
@@ -223,6 +232,8 @@ function renderLista(list){
 
         return `
         <div class="card-prof">
+            <img src="${icono(p.categoria)}" width="35">
+
             <b>${p.nombre}</b>
             <div class="badge">${p.categoria}</div>
 
@@ -240,14 +251,14 @@ function renderLista(list){
     }).join("");
 }
 
-// ================= BUSCADOR =================
-buscador.oninput = ()=>{
+/* ================= BUSCADOR ================= */
+buscador.oninput=()=>{
     if(vista==="categorias") renderCategorias();
     else renderLista(filtrar(profesionales));
 };
 
-// ================= VOLVER =================
-volver.onclick = ()=>{
+/* ================= VOLVER ================= */
+volver.onclick=()=>{
     buscador.value="";
     renderCategorias();
 };
