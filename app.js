@@ -182,26 +182,60 @@ function icono(cat) {
     return "icons/default.png";
 }
 
-// ===== HORARIO ABIERTO / CERRADO =====
-function estaAbierto(horario) {
+// ===== HORARIO INTELIGENTE =====
+function estadoHorario(horario) {
     const ahora = new Date();
-    const hora = ahora.getHours();
+    const dia = ahora.getDay();
+    const horaActual = ahora.getHours() * 60 + ahora.getMinutes();
 
-    const texto = (horario || "").toLowerCase();
+    const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+    const nombreDia = dias[dia];
 
-    if (texto.includes("24")) return true;
+    const texto = horario?.[nombreDia];
 
-    const match = texto.match(/(\d{1,2})\s*-\s*(\d{1,2})/);
-    if (!match) return true;
-
-    const h1 = parseInt(match[1]);
-    const h2 = parseInt(match[2]);
-
-    if (h1 <= h2) {
-        return hora >= h1 && hora < h2;
-    } else {
-        return hora >= h1 || hora < h2;
+    if (!texto || texto.toLowerCase() === "cerrado") {
+        return { estado: "cerrado" };
     }
+
+    if (texto.toLowerCase().includes("24")) {
+        return { estado: "abierto", texto: "Abierto 24hs" };
+    }
+
+    const match = texto.match(/(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?/);
+
+    if (!match) return { estado: "abierto" };
+
+    let h1 = parseInt(match[1]) * 60;
+    let h2 = parseInt(match[3]) * 60;
+
+    if (match[2]) h1 += parseInt(match[2]);
+    if (match[4]) h2 += parseInt(match[4]);
+
+    if (horaActual >= h1 && horaActual < h2) {
+        return {
+            estado: "abierto",
+            cierraEn: h2 - horaActual
+        };
+    }
+
+    if (horaActual < h1) {
+        return {
+            estado: "cerrado",
+            abreEn: h1 - horaActual
+        };
+    }
+
+    return { estado: "cerrado" };
+}
+
+// ===== FORMATO TIEMPO =====
+function formatearMinutos(min) {
+    if (min < 60) return `${min} min`;
+
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+
+    return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
 // ===== AGRUPAR =====
@@ -266,7 +300,8 @@ function filtrar(lista) {
 // ===== RENDER LISTA =====
 function renderLista(lista) {
     contenedor.innerHTML = lista.map(p => {
-        const abierto = estaAbierto(p.horario);
+
+        const estado = estadoHorario(p.horario);
 
         return `
         <div class="card-prof">
@@ -281,14 +316,17 @@ function renderLista(lista) {
 
             <p>📍 ${p.ciudad || "Sin ciudad"}</p>
             <p>🏠 ${p.direccion || "Sin dirección"}</p>
-            <p>🕒 ${p.horario || "Sin horario"}</p>
+            <p>🕒 ${p.horario ? JSON.stringify(p.horario) : "Sin horario"}</p>
 
             <p style="font-weight:bold;">
-                ${abierto
-                    ? '<span style="color:#22c55e">🟢 Abierto ahora</span>'
-                    : '<span style="color:#ef4444">🔴 Cerrado ahora</span>'
+                ${estado.estado === "abierto"
+                    ? "🟢 Abierto ahora"
+                    : "🔴 Cerrado ahora"
                 }
             </p>
+
+            ${estado.cierraEn ? `<p style="color:#facc15">⏳ Cierra en ${formatearMinutos(estado.cierraEn)}</p>` : ""}
+            ${estado.abreEn ? `<p style="color:#38bdf8">⏱ Abre en ${formatearMinutos(estado.abreEn)}</p>` : ""}
 
             <a href="tel:${p.telefono}">Llamar</a>
             <a href="https://wa.me/${p.whatsapp}" target="_blank">WhatsApp</a>
