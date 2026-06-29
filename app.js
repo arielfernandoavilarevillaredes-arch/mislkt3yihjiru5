@@ -1,5 +1,5 @@
 // URL del JSON (cambiá esto por tu dominio real)
-const DATA_URL = "data.json";
+const DATA_URL = "./data.json";
 
 let profesionales = [];
 
