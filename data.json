@@ -1,30 +1,11 @@
-[
-  {
-    "nombre": "Juan Pérez",
-    "categoria": "Electricista",
-    "tags": ["hogar", "electricidad"],
-    "telefono": "2920456789",
-    "whatsapp": "5492920456789"
-  },
-  {
-    "nombre": "María González",
-    "categoria": "Plomera",
-    "tags": ["agua", "reparaciones"],
-    "telefono": "2920555511",
-    "whatsapp": "5492920555511"
-  },
-  {
-    "nombre": "Gasista Matriculado",
-    "categoria": "Gas",
-    "tags": ["gas", "seguridad"],
-    "telefono": "2920987654",
-    "whatsapp": "5492920987654"
-  },
-  {
-    "nombre": "Veterinaria Patitas",
-    "categoria": "Veterinaria",
-    "tags": ["animales", "salud"],
-    "telefono": "2920445566",
-    "whatsapp": "5492920445566"
-  }
-]
+{
+  "nombre": "Juan Pérez",
+  "categoria": "Electricista",
+  "direccion": "Calle 123",
+  "ciudad": "Río Colorado",
+  "descripcion": "Electricista domiciliario 24hs",
+  "tags": ["hogar", "electricidad"],
+  "telefono": "2920456789",
+  "whatsapp": "5492920456789",
+  "favoritos": 0
+}
