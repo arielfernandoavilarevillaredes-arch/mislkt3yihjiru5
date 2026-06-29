@@ -8,7 +8,7 @@ import {
   increment
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ===== CONFIG FIREBASE =====
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyBMIU2q4pQ643sm6nY0dBSLFejBTtaWf9M",
   authDomain: "w-a66c5.firebaseapp.com",
@@ -21,25 +21,34 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ===== DOM =====
+// ================= DOM =================
 const contenedor = document.getElementById("app");
 
 let profesionales = [];
 
-// ===== CARGAR DESDE FIREBASE =====
+// ================= CARGAR DATOS =================
 async function cargarProfesionales() {
-  const snap = await getDocs(collection(db, "profesionales"));
+  try {
+    contenedor.innerHTML = "<p>Cargando profesionales...</p>";
 
-  profesionales = snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
+    const snap = await getDocs(collection(db, "profesionales"));
 
-  render(profesionales);
+    profesionales = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
+
+    render(profesionales);
+
+  } catch (err) {
+    console.error(err);
+    contenedor.innerHTML = "<p>Error cargando datos</p>";
+  }
 }
 
 cargarProfesionales();
 
+// ================= ICONOS =================
 function icono(cat = "") {
   cat = cat.toLowerCase();
 
@@ -55,6 +64,7 @@ function icono(cat = "") {
   return "👤";
 }
 
+// ================= RENDER =================
 function render(lista) {
   if (!lista.length) {
     contenedor.innerHTML = "<p>No hay resultados</p>";
@@ -63,11 +73,12 @@ function render(lista) {
 
   contenedor.innerHTML = lista.map(p => `
     <div class="card">
+
       <div class="heart">❤️ ${p.favoritos || 0}</div>
 
       <h2>${icono(p.categoria)} ${p.nombre}</h2>
 
-      <b>${p.categoria}</b>
+      <b>${p.categoria || ""}</b>
 
       <p>📍 ${p.direccion || ""}</p>
       <p>🏙 ${p.ciudad || ""}</p>
@@ -79,37 +90,48 @@ function render(lista) {
       <div class="botones">
         <a href="tel:${p.telefono}">📞 Llamar</a>
         <a href="https://wa.me/${p.whatsapp}" target="_blank">💬 WhatsApp</a>
-        <button onclick="sumarFavorito('${p.id}', ${p.favoritos || 0})">❤️</button>
+        <button class="fav-btn" data-id="${p.id}">❤️</button>
       </div>
+
     </div>
   `).join("");
 }
 
-
+// ================= FAVORITOS =================
 const yaVotados = JSON.parse(localStorage.getItem("favs")) || {};
 
-window.sumarFavorito = async function(id, actual) {
+// click global seguro
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("fav-btn")) {
+    const id = e.target.dataset.id;
 
-  if (yaVotados[id]) {
-    alert("Ya votaste este profesional desde este navegador");
-    return;
+    if (yaVotados[id]) {
+      alert("Ya marcaste este profesional desde este navegador");
+      return;
+    }
+
+    try {
+      const ref = doc(db, "profesionales", id);
+
+      await updateDoc(ref, {
+        favoritos: increment(1)
+      });
+
+      yaVotados[id] = true;
+      localStorage.setItem("favs", JSON.stringify(yaVotados));
+
+      cargarProfesionales();
+
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar favorito");
+    }
   }
+});
 
-  const ref = doc(db, "profesionales", id);
-
-  await updateDoc(ref, {
-    favoritos: increment(1)
-  });
-
-  yaVotados[id] = true;
-  localStorage.setItem("favs", JSON.stringify(yaVotados));
-
-  cargarProfesionales();
-};
-
-
+// ================= BUSCADOR =================
 const buscador = document.createElement("input");
-buscador.placeholder = "Buscar...";
+buscador.placeholder = "Buscar profesional, categoría, ciudad, dirección...";
 buscador.style.width = "100%";
 buscador.style.padding = "12px";
 buscador.style.margin = "10px 0";
@@ -129,5 +151,3 @@ buscador.addEventListener("input", () => {
 
   render(filtrados);
 });
-
-
