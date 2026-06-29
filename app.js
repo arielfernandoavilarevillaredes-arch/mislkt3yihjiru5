@@ -1,164 +1,133 @@
-const DATA_URL = "https://arielfernandoavilarevillaredes-arch.github.io/mislkt3yihjiru5/data.json";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  increment
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ===== CONFIG FIREBASE =====
+const firebaseConfig = {
+  apiKey: "AIzaSyBMIU2q4pQ643sm6nY0dBSLFejBTtaWf9M",
+  authDomain: "w-a66c5.firebaseapp.com",
+  projectId: "w-a66c5",
+  storageBucket: "w-a66c5.firebasestorage.app",
+  messagingSenderId: "732376393214",
+  appId: "1:732376393214:web:c70b178794272a07e44caf"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ===== DOM =====
+const contenedor = document.getElementById("app");
 
 let profesionales = [];
 
-document.body.innerHTML = `
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+// ===== CARGAR DESDE FIREBASE =====
+async function cargarProfesionales() {
+  const snap = await getDocs(collection(db, "profesionales"));
+
+  profesionales = snap.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
+
+  render(profesionales);
 }
 
-body{
-    font-family: "Segoe UI", Arial, sans-serif;
-    background: linear-gradient(135deg,#0f172a,#1e293b,#111827);
-    min-height:100vh;
-    color:white;
+cargarProfesionales();
+
+function icono(cat = "") {
+  cat = cat.toLowerCase();
+
+  if (cat.includes("electric")) return "⚡";
+  if (cat.includes("plom")) return "🚰";
+  if (cat.includes("gas")) return "🔥";
+  if (cat.includes("mec")) return "🚗";
+  if (cat.includes("pint")) return "🎨";
+  if (cat.includes("jard")) return "🌳";
+  if (cat.includes("abog")) return "⚖️";
+  if (cat.includes("med")) return "🩺";
+
+  return "👤";
 }
 
-header{
-    text-align:center;
-    padding:40px 20px;
-    background:rgba(255,255,255,.05);
-    backdrop-filter:blur(12px);
-    border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-header h1{
-    font-size:2.2rem;
-    margin-bottom:15px;
-}
-
-input{
-    width:min(600px,90%);
-    padding:14px 18px;
-    border:none;
-    border-radius:14px;
-    background:rgba(255,255,255,.12);
-    color:white;
-    font-size:16px;
-    outline:none;
-    transition:.3s;
-    backdrop-filter:blur(10px);
-}
-
-input::placeholder{
-    color:#cbd5e1;
-}
-
-input:focus{
-    background:rgba(255,255,255,.18);
-    box-shadow:0 0 0 3px rgba(59,130,246,.3);
-}
-
-#contenedor{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:25px;
-    padding:35px;
-}
-
-.card{
-    background:rgba(255,255,255,.08);
-    backdrop-filter:blur(15px);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:18px;
-    padding:20px;
-    transition:.3s;
-    overflow:hidden;
-    position:relative;
-}
-
-.card::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(135deg,transparent,rgba(255,255,255,.05));
-    pointer-events:none;
-}
-
-.card:hover{
-    transform:translateY(-8px);
-    box-shadow:0 20px 35px rgba(0,0,0,.35);
-}
-
-.card h3{
-    margin-bottom:10px;
-    font-size:20px;
-}
-
-.card p{
-    color:#cbd5e1;
-    line-height:1.6;
-}
-
-.card a{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    margin-top:18px;
-    padding:12px 18px;
-    background:linear-gradient(135deg,#3b82f6,#06b6d4);
-    color:white;
-    text-decoration:none;
-    border-radius:12px;
-    font-weight:600;
-    transition:.3s;
-}
-
-.card a:hover{
-    transform:scale(1.05);
-    box-shadow:0 10px 25px rgba(59,130,246,.45);
-}
-</style>
-
-<header>
-    <h2>Servicios Río Colorado</h2>
-    <input id="buscar" placeholder="Buscar profesional o rubro...">
-</header>
-
-<div id="contenedor">Cargando...</div>
-`;
-
-const contenedor = document.getElementById("contenedor");
-const buscar = document.getElementById("buscar");
-
-// ===== CARGAR DATOS =====
-fetch(DATA_URL)
-    .then(res => res.json())
-    .then(data => {
-        profesionales = data;
-        render(profesionales);
-    })
-    .catch(err => {
-        contenedor.innerHTML = "Error cargando datos";
-        console.log(err);
-    });
-
-// ===== RENDER =====
 function render(lista) {
-    contenedor.innerHTML = lista.map(p => `
-        <div class="card">
-            <h3>${p.nombre}</h3>
-            <b>${p.categoria}</b>
-            <p>${(p.tags || []).join(", ")}</p>
+  if (!lista.length) {
+    contenedor.innerHTML = "<p>No hay resultados</p>";
+    return;
+  }
 
-            <a href="tel:${p.telefono}">Llamar</a><br>
-            <a href="https://wa.me/${p.whatsapp}" target="_blank">WhatsApp</a>
-        </div>
-    `).join("");
+  contenedor.innerHTML = lista.map(p => `
+    <div class="card">
+      <div class="heart">❤️ ${p.favoritos || 0}</div>
+
+      <h2>${icono(p.categoria)} ${p.nombre}</h2>
+
+      <b>${p.categoria}</b>
+
+      <p>📍 ${p.direccion || ""}</p>
+      <p>🏙 ${p.ciudad || ""}</p>
+
+      <p>${p.descripcion || ""}</p>
+
+      <p class="tags">${(p.tags || []).join(" • ")}</p>
+
+      <div class="botones">
+        <a href="tel:${p.telefono}">📞 Llamar</a>
+        <a href="https://wa.me/${p.whatsapp}" target="_blank">💬 WhatsApp</a>
+        <button onclick="sumarFavorito('${p.id}', ${p.favoritos || 0})">❤️</button>
+      </div>
+    </div>
+  `).join("");
 }
 
-// ===== BUSCADOR =====
-buscar.addEventListener("input", () => {
-    const t = buscar.value.toLowerCase();
 
-    const filtrados = profesionales.filter(p =>
-        p.nombre.toLowerCase().includes(t) ||
-        p.categoria.toLowerCase().includes(t) ||
-        (p.tags || []).join(" ").toLowerCase().includes(t)
-    );
+const yaVotados = JSON.parse(localStorage.getItem("favs")) || {};
 
-    render(filtrados);
+window.sumarFavorito = async function(id, actual) {
+
+  if (yaVotados[id]) {
+    alert("Ya votaste este profesional desde este navegador");
+    return;
+  }
+
+  const ref = doc(db, "profesionales", id);
+
+  await updateDoc(ref, {
+    favoritos: increment(1)
+  });
+
+  yaVotados[id] = true;
+  localStorage.setItem("favs", JSON.stringify(yaVotados));
+
+  cargarProfesionales();
+};
+
+
+const buscador = document.createElement("input");
+buscador.placeholder = "Buscar...";
+buscador.style.width = "100%";
+buscador.style.padding = "12px";
+buscador.style.margin = "10px 0";
+
+document.body.insertBefore(buscador, contenedor);
+
+buscador.addEventListener("input", () => {
+  const t = buscador.value.toLowerCase();
+
+  const filtrados = profesionales.filter(p =>
+    (p.nombre || "").toLowerCase().includes(t) ||
+    (p.categoria || "").toLowerCase().includes(t) ||
+    (p.ciudad || "").toLowerCase().includes(t) ||
+    (p.direccion || "").toLowerCase().includes(t) ||
+    (p.tags || []).join(" ").toLowerCase().includes(t)
+  );
+
+  render(filtrados);
 });
+
+
