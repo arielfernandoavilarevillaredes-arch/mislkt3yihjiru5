@@ -23,8 +23,6 @@ header{
     backdrop-filter:blur(10px);
 }
 
-h2{margin-bottom:10px;}
-
 input{
     width:min(650px,90%);
     padding:10px;
@@ -47,25 +45,23 @@ input{
 
 #contenedor{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
     gap:12px;
     padding:20px;
 }
 
-/* cards */
-.card-cat,.card-prof{
+.card{
     background:rgba(255,255,255,.08);
     border-radius:14px;
     padding:12px;
     transition:.2s;
 }
 
-.card-cat:hover,.card-prof:hover{
-    transform:scale(1.03);
+.card:hover{
+    transform:scale(1.02);
     background:rgba(255,255,255,.12);
 }
 
-/* badge */
 .badge{
     display:inline-block;
     padding:3px 8px;
@@ -75,20 +71,19 @@ input{
     margin-top:4px;
 }
 
-/* botones */
 .btn{
     display:inline-block;
     margin-top:8px;
     padding:8px 10px;
     border-radius:8px;
     font-size:12px;
+    font-weight:bold;
     border:none;
     cursor:pointer;
-    font-weight:bold;
 }
 
-.btn-call{background:#22c55e;color:white;}
-.btn-wa{background:#25D366;color:white;}
+.call{background:#22c55e;color:white;}
+.wa{background:#25D366;color:white;}
 </style>
 
 <header>
@@ -104,7 +99,7 @@ const contenedor = document.getElementById("contenedor");
 const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
-/* ================= HELP ================= */
+/* ================= HELPERS ================= */
 function norm(t){ return (t||"").toLowerCase().trim(); }
 
 function parseTime(t){
@@ -115,7 +110,6 @@ function parseTime(t){
 
 function formatTime(min){
     if(min <= 0) return "ahora";
-
     if(min < 60) return `${min} min`;
 
     const h = Math.floor(min/60);
@@ -179,7 +173,7 @@ function estadoHorario(h){
     const dia = h[hoy];
 
     if(!dia || dia === "cerrado"){
-        return {estado:"cerrado", texto:"🔴 Cerrado"};
+        return buscarProximo(h, ahora.getDay());
     }
 
     const ini = parseTime(dia.abre);
@@ -199,7 +193,42 @@ function estadoHorario(h){
         };
     }
 
-    return {estado:"cerrado", texto:"🔴 Cerrado"};
+    return buscarProximo(h, ahora.getDay());
+}
+
+/* ================= PRÓXIMO HORARIO ================= */
+function buscarProximo(h, hoyIndex){
+
+    const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+
+    for(let i=1;i<=7;i++){
+        const d = (hoyIndex+i)%7;
+        const dia = h[dias[d]];
+
+        if(dia && dia !== "cerrado"){
+            return {
+                estado:"cerrado",
+                texto:`🔴 Cerrado · abre en ${formatTime(i*24*60)}`
+            };
+        }
+    }
+
+    return {estado:"cerrado", texto:"🔴 Cerrado toda la semana"};
+}
+
+/* ================= HORARIOS DETALLE ================= */
+function mostrarHorarios(h){
+
+    if(!h || h === "sin horario") return "Sin horario fijo";
+    if(h === "24h" || h === "24 horas") return "Abierto 24 horas";
+
+    const dias = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"];
+
+    return dias.map(d=>{
+        const x = h[d];
+        if(!x || x === "cerrado") return `${d}: cerrado`;
+        return `${d}: ${x.abre} - ${x.cierra}`;
+    }).join("<br>");
 }
 
 /* ================= AGRUPAR ================= */
@@ -213,7 +242,7 @@ function agrupar(list){
     return g;
 }
 
-/* ================= CATEGORÍAS ================= */
+/* ================= UI ================= */
 function renderCategorias(){
     vista="categorias";
     categoriaActual=null;
@@ -222,16 +251,15 @@ function renderCategorias(){
     const grupos = agrupar(profesionales);
 
     contenedor.innerHTML = Object.keys(grupos).map(cat=>`
-        <div class="card-cat" data-cat="${cat}">
+        <div class="card" data-cat="${cat}">
             <img src="${icono(cat)}" width="40">
             <div>${cat}</div>
         </div>
     `).join("");
 }
 
-/* FIX CLICK */
 contenedor.onclick = (e)=>{
-    const c = e.target.closest(".card-cat");
+    const c = e.target.closest(".card");
     if(!c) return;
     categoriaActual = norm(c.dataset.cat);
     verCategoria();
@@ -248,13 +276,7 @@ function filtrar(list){
     const t = norm(buscador.value);
 
     return list.filter(p=>{
-        const txt = `
-        ${p.nombre}
-        ${p.categoria}
-        ${(p.tags||[]).join(" ")}
-        ${p.ciudad}
-        ${p.direccion}
-        `.toLowerCase();
+        const txt = `${p.nombre} ${p.categoria} ${(p.tags||[]).join(" ")} ${p.ciudad} ${p.direccion}`.toLowerCase();
 
         return norm(p.categoria)===categoriaActual && txt.includes(t);
     });
@@ -269,7 +291,7 @@ function renderLista(){
         const e = estadoHorario(p.horario);
 
         return `
-        <div class="card-prof">
+        <div class="card">
 
             <b>${p.nombre}</b>
             <div class="badge">${p.categoria}</div>
@@ -281,15 +303,12 @@ function renderLista(){
                 ${e.texto}
             </p>
 
-            <button class="btn btn-call"
-                onclick="location.href='tel:${p.telefono}'">
-                📞 Llamar
-            </button>
+            <div style="margin-top:8px;font-size:12px;color:#cbd5e1;">
+                ${mostrarHorarios(p.horario)}
+            </div>
 
-            <button class="btn btn-wa"
-                onclick="window.open('https://wa.me/${p.whatsapp}','_blank')">
-                WhatsApp
-            </button>
+            <button class="btn call" onclick="location.href='tel:${p.telefono}'">📞 Llamar</button>
+            <button class="btn wa" onclick="window.open('https://wa.me/${p.whatsapp}','_blank')">WhatsApp</button>
 
         </div>
         `;
