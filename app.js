@@ -1,5 +1,5 @@
 // URL del JSON (cambiá esto por tu dominio real)
-const DATA_URL = "https://raw.githubusercontent.com/arielfernandoavilarevillaredes-arch/mislkt3yihjiru5/main/data.json";
+const DATA_URL = "data.json";
 
 let profesionales = [];
 
