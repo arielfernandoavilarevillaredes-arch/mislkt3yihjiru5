@@ -74,6 +74,30 @@ input{
     border-radius:999px;
     background:rgba(59,130,246,.25);
 }
+
+/* 🔥 BOTONES REALES */
+.btn{
+    display:inline-block;
+    margin-top:8px;
+    padding:8px 10px;
+    border-radius:10px;
+    text-decoration:none;
+    font-size:12px;
+    font-weight:bold;
+    text-align:center;
+    cursor:pointer;
+    border:none;
+}
+
+.btn-whatsapp{
+    background:#22c55e;
+    color:white;
+}
+
+.btn-call{
+    background:#3b82f6;
+    color:white;
+}
 </style>
 
 <header>
@@ -90,7 +114,9 @@ const buscador = document.getElementById("buscador");
 const volver = document.getElementById("volver");
 
 /* ================= HELP ================= */
-function norm(t){ return (t||"").toLowerCase().trim(); }
+function norm(t){ 
+    return (t || "").toLowerCase().trim(); 
+}
 
 /* ================= DATA ================= */
 fetch(DATA_URL)
@@ -120,7 +146,7 @@ function icono(cat){
 function estadoHorario(h){
 
     if(!h || h === "sin horario"){
-        return {estado:"abierto", texto:"🟢 Abierto todo el día (sin horario)"};
+        return {estado:"abierto", texto:"🟢 Abierto todo el día"};
     }
 
     const ahora = new Date();
@@ -188,12 +214,12 @@ function renderCategorias(){
     `).join("");
 }
 
-/* CLICK CATEGORÍA (FIX) */
+/* CLICK CATEGORÍAS (FIX REAL) */
 contenedor.addEventListener("click",(e)=>{
     const card = e.target.closest(".card-cat");
     if(!card) return;
 
-    categoriaActual = norm(card.dataset.cat);
+    categoriaActual = card.dataset.cat; // 🔥 FIX IMPORTANTE
     verCategoria();
 });
 
@@ -217,7 +243,7 @@ function filtrar(list){
         `.toLowerCase();
 
         if(vista==="lista"){
-            return norm(p.categoria)===categoriaActual && txt.includes(t);
+            return norm(p.categoria) === norm(categoriaActual) && txt.includes(t);
         }
 
         return txt.includes(t);
@@ -232,7 +258,8 @@ function renderLista(list){
 
         return `
         <div class="card-prof">
-            <img src="${icono(p.categoria)}" width="35">
+
+            <img src="${icono(p.categoria)}" width="40">
 
             <b>${p.nombre}</b>
             <div class="badge">${p.categoria}</div>
@@ -244,8 +271,15 @@ function renderLista(list){
                 ${e.texto}
             </p>
 
-            <a href="tel:${p.telefono}">Llamar</a>
-            <a href="https://wa.me/${p.whatsapp}" target="_blank">WhatsApp</a>
+            <!-- 🔥 BOTONES -->
+            <a class="btn btn-call" href="tel:${p.telefono}">
+                📞 Llamar
+            </a>
+
+            <a class="btn btn-whatsapp" href="https://wa.me/${p.whatsapp}" target="_blank">
+                💬 WhatsApp
+            </a>
+
         </div>
         `;
     }).join("");
