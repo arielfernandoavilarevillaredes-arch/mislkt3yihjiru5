@@ -259,12 +259,23 @@ function renderCategorias() {
     const grupos = agrupar(profesionales);
 
     contenedor.innerHTML = Object.keys(grupos).sort().map(cat => `
-        <div class="card-cat" onclick="verCategoria('${cat}')">
+        <div class="card-cat" data-cat="${cat}">
             <img src="${icono(cat)}">
             <div>${cat}</div>
         </div>
     `).join("");
 }
+
+// ===== CLICK CATEGORÍAS (FIX PRO) =====
+contenedor.addEventListener("click", (e) => {
+    const card = e.target.closest(".card-cat");
+    if (!card) return;
+
+    const cat = card.dataset.cat;
+    if (!cat) return;
+
+    verCategoria(cat);
+});
 
 // ===== VER CATEGORÍA =====
 function verCategoria(cat) {
@@ -316,7 +327,6 @@ function renderLista(lista) {
 
             <p>📍 ${p.ciudad || "Sin ciudad"}</p>
             <p>🏠 ${p.direccion || "Sin dirección"}</p>
-            <p>🕒 ${p.horario ? JSON.stringify(p.horario) : "Sin horario"}</p>
 
             <p style="font-weight:bold;">
                 ${estado.estado === "abierto"
@@ -345,7 +355,7 @@ buscador.addEventListener("input", () => {
         );
 
         contenedor.innerHTML = filtradas.map(cat => `
-            <div class="card-cat" onclick="verCategoria('${cat}')">
+            <div class="card-cat" data-cat="${cat}">
                 <img src="${icono(cat)}">
                 <div>${cat}</div>
             </div>
