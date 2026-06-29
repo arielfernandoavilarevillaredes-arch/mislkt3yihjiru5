@@ -1,4 +1,4 @@
-const DATA_URL = "./data.json";
+const DATA_URL = "https://arielfernandoavilarevillaredes-arch.github.io/mislkt3yihjiru5/data.json";
 
 let profesionales = [];
 
